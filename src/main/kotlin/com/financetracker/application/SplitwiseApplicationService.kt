@@ -40,7 +40,7 @@ class SplitwiseApplicationService(
                 commandGateway.send<AddTransactionCommand>(
                     AddTransactionCommand(
                         accountId = request.account,
-                        type = TransactionType.CREDIT,
+                        type = TransactionType.DEBIT,
                         amount = Money(ue.owedShare.toDouble(), Currency.CAD),
                         details =
                             TransactionDetails(

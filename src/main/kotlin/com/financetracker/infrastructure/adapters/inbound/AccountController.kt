@@ -1,10 +1,10 @@
 package com.financetracker.infrastructure.adapters.inbound
 
 import com.financetracker.application.AccountApplicationService
+import com.financetracker.application.queries.AccountBalancesQuery
+import com.financetracker.application.queries.TransactionsForMonthQuery
 import com.financetracker.domain.account.projections.AccountBalanceView
-import com.financetracker.domain.account.projections.FindAllAccountBalances
 import com.financetracker.domain.account.projections.MonthTransactionsView
-import com.financetracker.domain.account.projections.QueryTransactionsForMonth
 import com.financetracker.infrastructure.adapters.inbound.dto.CreateAccountRequest
 import com.financetracker.infrastructure.adapters.inbound.dto.CreditAccountRequest
 import com.financetracker.infrastructure.adapters.inbound.dto.DebitAccountRequest
@@ -31,12 +31,12 @@ class AccountController(val accountApplicationService: AccountApplicationService
 
   @GetMapping("/account")
   fun balances(): ResponseEntity<List<AccountBalanceView>> {
-    return ResponseEntity.ok(accountApplicationService.getAccounts(FindAllAccountBalances()))
+    return ResponseEntity.ok(accountApplicationService.getAccounts(AccountBalancesQuery()))
   }
 
   @GetMapping("/transactions")
   fun transactions(
-      @RequestBody request: QueryTransactionsForMonth
+      @RequestBody request: TransactionsForMonthQuery
   ): ResponseEntity<List<MonthTransactionsView>> {
     return ResponseEntity.ok(accountApplicationService.getTransactions(request))
   }
