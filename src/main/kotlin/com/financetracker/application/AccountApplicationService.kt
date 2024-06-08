@@ -1,74 +1,80 @@
 package com.financetracker.application
 
-import com.financetracker.application.api.AccountQueryUserCase
-import com.financetracker.application.api.AccountUseCase
-import com.financetracker.application.api.TransactionUseCase
-import com.financetracker.application.api.dto.*
-import com.financetracker.application.spi.EventStore
-import com.financetracker.domain.account.events.AccountCreated
-import com.financetracker.domain.account.events.AccountCredited
-import com.financetracker.domain.account.events.AccountDebited
-import com.financetracker.domain.account.model.Account
-import com.financetracker.domain.account.projections.AccountBalanceProjection
-import com.financetracker.domain.account.projections.AccountTransactionsProjection
-import com.financetracker.domain.account.service.AccountProjectionService
-import com.financetracker.domain.account.service.AccountService
+import com.financetracker.application.commands.AddTransactionCommand
+import com.financetracker.application.commands.CreateAccountCommand
+import com.financetracker.domain.account.model.AccountType
+import com.financetracker.domain.account.model.Category
+import com.financetracker.domain.account.model.Organization
+import com.financetracker.domain.account.model.TransactionType
+import com.financetracker.domain.account.projections.AccountBalanceView
+import com.financetracker.domain.account.projections.FindAllAccountBalances
+import com.financetracker.domain.account.projections.MonthTransactionsView
+import com.financetracker.domain.account.projections.QueryTransactionsForMonth
+import com.financetracker.domain.account.valueObjects.Currency
+import com.financetracker.domain.account.valueObjects.Money
+import com.financetracker.domain.account.valueObjects.TransactionDetails
+import com.financetracker.infrastructure.adapters.inbound.dto.CreateAccountRequest
+import com.financetracker.infrastructure.adapters.inbound.dto.CreditAccountRequest
+import com.financetracker.infrastructure.adapters.inbound.dto.DebitAccountRequest
+import org.axonframework.commandhandling.gateway.CommandGateway
+import org.axonframework.messaging.responsetypes.ResponseTypes
+import org.axonframework.queryhandling.QueryGateway
 import org.springframework.stereotype.Service
 
 @Service
 class AccountApplicationService(
-    private val accountService: AccountService,
-    private val accountProjectionService: AccountProjectionService,
-    private val eventStore: EventStore
-) : AccountUseCase, TransactionUseCase, AccountQueryUserCase {
-  override fun createAccount(createAccountRequest: CreateAccountRequest): Account {
-    val createdAccount = accountService.createAccount(createAccountRequest)
-    val event =
-        AccountCreated(
-            createdAccount.id,
-            createdAccount.name,
-            createdAccount.type.toString(),
-            createdAccount.description,
-            createdAccount.organization.toString())
-    eventStore.save(event)
-    return createdAccount
+    val commandGateway: CommandGateway,
+    val queryGateway: QueryGateway
+) {
+
+  fun createAccount(request: CreateAccountRequest): AccountBalanceView {
+    val accountId = request.org + "_" + request.type
+    commandGateway.send<CreateAccountCommand>(
+        CreateAccountCommand(
+            accountId = accountId,
+            type = AccountType.valueOf(request.type.uppercase()),
+            org = Organization.valueOf(request.org.uppercase()),
+            initialBalance =
+                Money(request.initialBalance, Currency.valueOf(request.currency.uppercase()))))
+
+    return AccountBalanceView(accountId, request.initialBalance)
   }
 
-  override fun credit(creditTransactionRequest: CreditTransactionRequest) {
-    accountService.validateAccount(creditTransactionRequest.account)
-    val event =
-        AccountCredited(
-            id = creditTransactionRequest.account,
-            amount = creditTransactionRequest.amount,
-            description = creditTransactionRequest.description,
-            category = creditTransactionRequest.category,
-            occurredOn = creditTransactionRequest.occurredOn)
-
-    eventStore.save(event)
+  fun creditAccount(accountId: String, request: CreditAccountRequest) {
+    commandGateway.send<AddTransactionCommand>(
+        AddTransactionCommand(
+            accountId = accountId,
+            type = TransactionType.CREDIT,
+            amount = Money(request.amount, Currency.CAD),
+            details =
+                TransactionDetails(
+                    description = request.description,
+                    category = Category.valueOf(request.category.uppercase()),
+                    occurredOn = request.occurredOn)))
   }
 
-  override fun debit(debitTransactionRequest: DebitTransactionRequest) {
-    accountService.validateAccount(debitTransactionRequest.account)
-    val event =
-        AccountDebited(
-            id = debitTransactionRequest.account,
-            amount = debitTransactionRequest.amount,
-            description = debitTransactionRequest.description,
-            category = debitTransactionRequest.category,
-            occurredOn = debitTransactionRequest.occurredOn)
-
-    eventStore.save(event)
+  fun debitAccount(accountId: String, request: DebitAccountRequest) {
+    commandGateway.send<AddTransactionCommand>(
+        AddTransactionCommand(
+            accountId = accountId,
+            type = TransactionType.DEBIT,
+            amount = Money(request.amount, Currency.CAD),
+            details =
+                TransactionDetails(
+                    description = request.description,
+                    category = Category.valueOf(request.category.uppercase()),
+                    occurredOn = request.occurredOn)))
   }
 
-  override fun queryAccountBalance(request: AccountBalanceRequest): AccountBalanceProjection {
-    val events = eventStore.query(request.accountNumber)
-    return accountProjectionService.getAccountBalance(events)
+  fun getAccounts(query: FindAllAccountBalances): List<AccountBalanceView> {
+    return queryGateway
+        .query(query, ResponseTypes.multipleInstancesOf(AccountBalanceView::class.java))
+        .get()
   }
 
-  override fun queryAccountTransactions(
-      request: AccountTransactionRequest
-  ): AccountTransactionsProjection {
-    val events = eventStore.query(request.accountNumber)
-    return accountProjectionService.getAccountTransactions(events)
+  fun getTransactions(query: QueryTransactionsForMonth): List<MonthTransactionsView> {
+    return queryGateway
+        .query(query, ResponseTypes.multipleInstancesOf(MonthTransactionsView::class.java))
+        .get()
   }
 }
