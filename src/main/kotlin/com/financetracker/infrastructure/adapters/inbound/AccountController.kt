@@ -5,6 +5,7 @@ import com.financetracker.application.queries.AccountBalancesQuery
 import com.financetracker.application.queries.TransactionsForMonthQuery
 import com.financetracker.domain.account.projections.AccountBalanceView
 import com.financetracker.domain.account.projections.MonthTransactionsView
+import com.financetracker.infrastructure.adapters.inbound.dto.AddExpenseRequest
 import com.financetracker.infrastructure.adapters.inbound.dto.CreateAccountRequest
 import com.financetracker.infrastructure.adapters.inbound.dto.CreditAccountRequest
 import com.financetracker.infrastructure.adapters.inbound.dto.DebitAccountRequest
@@ -34,10 +35,21 @@ class AccountController(val accountApplicationService: AccountApplicationService
     return ResponseEntity.ok(accountApplicationService.getAccounts(AccountBalancesQuery()))
   }
 
-  @GetMapping("/transactions")
+  @PostMapping("/transactions/list")
   fun transactions(
       @RequestBody request: TransactionsForMonthQuery
   ): ResponseEntity<List<MonthTransactionsView>> {
     return ResponseEntity.ok(accountApplicationService.getTransactions(request))
+  }
+
+  @PostMapping("/transactions")
+  fun addTransactions(@RequestBody request: List<AddExpenseRequest>): ResponseEntity<Unit> {
+    accountApplicationService.addTransactions(request)
+    return ResponseEntity.ok().build()
+  }
+
+  @GetMapping("/categories")
+  fun listCategories(): ResponseEntity<List<String>> {
+    return ResponseEntity.ok(accountApplicationService.listCategories())
   }
 }

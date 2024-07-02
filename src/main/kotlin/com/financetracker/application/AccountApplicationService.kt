@@ -13,6 +13,7 @@ import com.financetracker.domain.account.projections.MonthTransactionsView
 import com.financetracker.domain.account.valueObjects.Currency
 import com.financetracker.domain.account.valueObjects.Money
 import com.financetracker.domain.account.valueObjects.TransactionDetails
+import com.financetracker.infrastructure.adapters.inbound.dto.AddExpenseRequest
 import com.financetracker.infrastructure.adapters.inbound.dto.CreateAccountRequest
 import com.financetracker.infrastructure.adapters.inbound.dto.CreditAccountRequest
 import com.financetracker.infrastructure.adapters.inbound.dto.DebitAccountRequest
@@ -76,5 +77,26 @@ class AccountApplicationService(
     return queryGateway
         .query(query, ResponseTypes.multipleInstancesOf(MonthTransactionsView::class.java))
         .get()
+  }
+
+  fun addTransactions(request: List<AddExpenseRequest>): List<AddExpenseRequest> {
+    request
+        .map {
+          AddTransactionCommand(
+              accountId = it.accountId,
+              type = TransactionType.DEBIT,
+              amount = Money(it.amount, Currency.CAD),
+              details =
+                  TransactionDetails(
+                      description = it.description,
+                      category = Category.valueOf(it.category.uppercase()),
+                      occurredOn = it.occurredOn))
+        }
+        .forEach { commandGateway.send<AddTransactionCommand>(it) }
+    return request
+  }
+
+  fun listCategories(): List<String> {
+    return Category.entries.map { it.toString() }
   }
 }
