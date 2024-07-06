@@ -13,14 +13,13 @@ import com.financetracker.domain.account.projections.MonthTransactionsView
 import com.financetracker.domain.account.valueObjects.Currency
 import com.financetracker.domain.account.valueObjects.Money
 import com.financetracker.domain.account.valueObjects.TransactionDetails
-import com.financetracker.infrastructure.adapters.inbound.dto.AddExpenseRequest
+import com.financetracker.infrastructure.adapters.inbound.dto.AddTransactionRequest
 import com.financetracker.infrastructure.adapters.inbound.dto.CreateAccountRequest
-import com.financetracker.infrastructure.adapters.inbound.dto.CreditAccountRequest
-import com.financetracker.infrastructure.adapters.inbound.dto.DebitAccountRequest
 import org.axonframework.commandhandling.gateway.CommandGateway
 import org.axonframework.messaging.responsetypes.ResponseTypes
 import org.axonframework.queryhandling.QueryGateway
 import org.springframework.stereotype.Service
+import java.util.*
 
 @Service
 class AccountApplicationService(
@@ -41,32 +40,6 @@ class AccountApplicationService(
     return AccountBalanceView(accountId, request.initialBalance)
   }
 
-  fun creditAccount(accountId: String, request: CreditAccountRequest) {
-    commandGateway.send<AddTransactionCommand>(
-        AddTransactionCommand(
-            accountId = accountId,
-            type = TransactionType.CREDIT,
-            amount = Money(request.amount, Currency.CAD),
-            details =
-                TransactionDetails(
-                    description = request.description,
-                    category = Category.valueOf(request.category.uppercase()),
-                    occurredOn = request.occurredOn)))
-  }
-
-  fun debitAccount(accountId: String, request: DebitAccountRequest) {
-    commandGateway.send<AddTransactionCommand>(
-        AddTransactionCommand(
-            accountId = accountId,
-            type = TransactionType.DEBIT,
-            amount = Money(request.amount, Currency.CAD),
-            details =
-                TransactionDetails(
-                    description = request.description,
-                    category = Category.valueOf(request.category.uppercase()),
-                    occurredOn = request.occurredOn)))
-  }
-
   fun getAccounts(query: AccountBalancesQuery): List<AccountBalanceView> {
     return queryGateway
         .query(query, ResponseTypes.multipleInstancesOf(AccountBalanceView::class.java))
@@ -79,12 +52,14 @@ class AccountApplicationService(
         .get()
   }
 
-  fun addTransactions(request: List<AddExpenseRequest>): List<AddExpenseRequest> {
+  fun addTransactions(request: List<AddTransactionRequest>): List<AddTransactionRequest> {
     request
+        .filter { it.type.uppercase() != "TRANSFER" }
         .map {
           AddTransactionCommand(
               accountId = it.accountId,
-              type = TransactionType.DEBIT,
+              transactionId = UUID.randomUUID().toString(),
+              type = TransactionType.valueOf(it.type.uppercase()),
               amount = Money(it.amount, Currency.CAD),
               details =
                   TransactionDetails(
@@ -93,6 +68,33 @@ class AccountApplicationService(
                       occurredOn = it.occurredOn))
         }
         .forEach { commandGateway.send<AddTransactionCommand>(it) }
+    request
+        .filter { it.type.uppercase() == "TRANSFER" }
+        .forEach {
+          commandGateway.send<AddTransactionCommand>(
+              AddTransactionCommand(
+                  accountId = it.accountId,
+                  transactionId = UUID.randomUUID().toString(),
+                  type = TransactionType.DEBIT,
+                  amount = Money(it.amount, Currency.CAD),
+                  details =
+                      TransactionDetails(
+                          description = "TRANSFER",
+                          category = Category.valueOf(it.category.uppercase()),
+                          occurredOn = it.occurredOn)))
+          commandGateway.send<AddTransactionCommand>(
+              AddTransactionCommand(
+                  accountId = it.toAccount!!,
+                  transactionId = UUID.randomUUID().toString(),
+                  type = TransactionType.CREDIT,
+                  amount = Money(it.amount, Currency.CAD),
+                  details =
+                      TransactionDetails(
+                          description = "TRANSFER",
+                          category = Category.valueOf(it.category.uppercase()),
+                          occurredOn = it.occurredOn)))
+        }
+
     return request
   }
 

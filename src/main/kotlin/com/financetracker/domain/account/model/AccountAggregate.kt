@@ -2,8 +2,10 @@ package com.financetracker.domain.account.model
 
 import com.financetracker.application.commands.AddTransactionCommand
 import com.financetracker.application.commands.CreateAccountCommand
+import com.financetracker.application.commands.DeleteTransactionCommand
 import com.financetracker.domain.account.events.AccountCreatedEvent
 import com.financetracker.domain.account.events.TransactionAddedEvent
+import com.financetracker.domain.account.events.TransactionDeletedEvent
 import com.financetracker.domain.account.valueObjects.Money
 import com.financetracker.domain.account.valueObjects.minus
 import com.financetracker.domain.account.valueObjects.plus
@@ -19,6 +21,7 @@ class AccountAggregate {
   lateinit var type: AccountType
   lateinit var org: Organization
   lateinit var balance: Money
+  var transactions: MutableList<String> = mutableListOf()
 
   constructor()
 
@@ -31,7 +34,19 @@ class AccountAggregate {
   @CommandHandler
   fun handle(command: AddTransactionCommand) {
     AggregateLifecycle.apply(
-        TransactionAddedEvent(command.accountId, command.type, command.amount, command.details))
+        TransactionAddedEvent(
+            command.accountId,
+            command.transactionId,
+            command.type,
+            command.amount,
+            command.details))
+  }
+
+  @CommandHandler
+  fun handle(command: DeleteTransactionCommand) {
+    AggregateLifecycle.apply(
+        TransactionDeletedEvent(
+            command.accountId, command.transactionId, command.type, command.amount))
   }
 
   @EventSourcingHandler
@@ -43,10 +58,20 @@ class AccountAggregate {
   }
 
   @EventSourcingHandler
+  fun on(event: TransactionDeletedEvent) {
+    when (event.type) {
+      TransactionType.DEBIT -> this.balance += event.amount
+      TransactionType.CREDIT -> this.balance -= event.amount
+    }
+    transactions.remove(event.transactionId)
+  }
+
+  @EventSourcingHandler
   fun on(event: TransactionAddedEvent) {
     when (event.type) {
       TransactionType.DEBIT -> this.balance -= event.amount
       TransactionType.CREDIT -> this.balance += event.amount
     }
+    transactions.add(event.transactionId)
   }
 }

@@ -10,5 +10,6 @@ enum class Category {
   DRINKS,
   TRAVEL,
   SPORTS,
-  GENERAL
+  GENERAL,
+  TRANSFER
 }

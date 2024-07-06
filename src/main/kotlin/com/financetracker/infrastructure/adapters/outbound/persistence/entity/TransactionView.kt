@@ -2,13 +2,16 @@ package com.financetracker.infrastructure.adapters.outbound.persistence.entity
 
 import com.financetracker.domain.account.model.Category
 import com.financetracker.domain.account.model.TransactionType
-import jakarta.persistence.*
+import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
+import jakarta.persistence.Id
 import java.time.LocalDate
 
 @Entity
 class TransactionView {
 
-  @Id @GeneratedValue(strategy = GenerationType.UUID) lateinit var id: String
+  @Id lateinit var id: String
 
   @Enumerated(EnumType.STRING) lateinit var type: TransactionType
 
@@ -19,4 +22,6 @@ class TransactionView {
   var amount: Double = 0.0
 
   lateinit var occurredOn: LocalDate
+
+  var deleted: Boolean = false
 }

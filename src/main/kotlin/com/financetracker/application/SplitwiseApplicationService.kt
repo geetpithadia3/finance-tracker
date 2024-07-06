@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service
 import java.time.LocalDate
 import java.time.Month
 import java.time.Year
+import java.util.*
 
 @Service
 class SplitwiseApplicationService(
@@ -40,6 +41,7 @@ class SplitwiseApplicationService(
                 commandGateway.send<AddTransactionCommand>(
                     AddTransactionCommand(
                         accountId = request.account,
+                        transactionId = UUID.randomUUID().toString(),
                         type = TransactionType.DEBIT,
                         amount = Money(ue.owedShare.toDouble(), Currency.CAD),
                         details =

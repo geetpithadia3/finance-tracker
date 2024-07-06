@@ -5,6 +5,7 @@ import com.financetracker.domain.account.model.TransactionType
 import java.time.LocalDate
 
 data class MonthTransactionsView(
+    val id: String,
     val account: String,
     val amount: Double,
     val description: String,

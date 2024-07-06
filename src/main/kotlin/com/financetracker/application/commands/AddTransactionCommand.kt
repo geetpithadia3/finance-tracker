@@ -7,7 +7,15 @@ import org.axonframework.modelling.command.TargetAggregateIdentifier
 
 data class AddTransactionCommand(
     @TargetAggregateIdentifier val accountId: String,
+    val transactionId: String,
     val type: TransactionType,
     val amount: Money,
     val details: TransactionDetails
+)
+
+data class DeleteTransactionCommand(
+    @TargetAggregateIdentifier val accountId: String,
+    val transactionId: String,
+    val type: TransactionType,
+    val amount: Money
 )
