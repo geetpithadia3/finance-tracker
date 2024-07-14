@@ -1,14 +1,15 @@
 package com.financetracker.application
 
-import com.financetracker.application.commands.AddTransactionCommand
-import com.financetracker.application.commands.CreateAccountCommand
-import com.financetracker.application.queries.AccountBalancesQuery
+import com.financetracker.application.commands.account.AddTransactionCommand
+import com.financetracker.application.commands.account.CreateAccountCommand
 import com.financetracker.application.queries.TransactionsForMonthQuery
+import com.financetracker.application.queries.account.AccountListQuery
 import com.financetracker.domain.account.model.AccountType
 import com.financetracker.domain.account.model.Category
 import com.financetracker.domain.account.model.Organization
 import com.financetracker.domain.account.model.TransactionType
 import com.financetracker.domain.account.projections.AccountBalanceView
+import com.financetracker.domain.account.projections.AccountView
 import com.financetracker.domain.account.projections.MonthTransactionsView
 import com.financetracker.domain.account.valueObjects.Currency
 import com.financetracker.domain.account.valueObjects.Money
@@ -40,9 +41,9 @@ class AccountApplicationService(
     return AccountBalanceView(accountId, request.initialBalance)
   }
 
-  fun getAccounts(query: AccountBalancesQuery): List<AccountBalanceView> {
+  fun getAccounts(query: AccountListQuery): List<AccountView> {
     return queryGateway
-        .query(query, ResponseTypes.multipleInstancesOf(AccountBalanceView::class.java))
+        .query(query, ResponseTypes.multipleInstancesOf(AccountView::class.java))
         .get()
   }
 

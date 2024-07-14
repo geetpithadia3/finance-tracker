@@ -8,3 +8,5 @@ data class FetchMonthSplitwiseTransactionsCommand(
     val year: Year,
     val account: String
 )
+
+class SyncSplitwiseTransactions(val account: String)

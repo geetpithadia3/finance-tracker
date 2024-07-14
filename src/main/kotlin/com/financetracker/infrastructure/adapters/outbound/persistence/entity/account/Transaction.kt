@@ -1,4 +1,4 @@
-package com.financetracker.infrastructure.adapters.outbound.persistence.entity
+package com.financetracker.infrastructure.adapters.outbound.persistence.entity.account
 
 import com.financetracker.domain.account.model.Category
 import com.financetracker.domain.account.model.TransactionType
@@ -9,7 +9,7 @@ import jakarta.persistence.Id
 import java.time.LocalDate
 
 @Entity
-class TransactionView {
+class Transaction {
 
   @Id lateinit var id: String
 

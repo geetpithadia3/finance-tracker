@@ -6,5 +6,15 @@ data class Expense(
     val amount: Double,
     val date: LocalDate,
     val description: String,
-    val category: String
+    val category: String,
+    val type: String = "Debit"
+)
+
+data class SyncedTransaction(
+    val id: Long,
+    val amount: Double,
+    val date: LocalDate,
+    val description: String,
+    val category: String,
+    val type: String = "Debit"
 )

@@ -1,14 +1,14 @@
 package com.financetracker.domain.account.projections
 
-import com.financetracker.application.queries.AccountBalancesQuery
 import com.financetracker.application.queries.TransactionsForMonthQuery
+import com.financetracker.application.queries.account.AccountBalancesQuery
+import com.financetracker.application.queries.account.AccountListQuery
 import com.financetracker.domain.account.events.AccountCreatedEvent
 import com.financetracker.domain.account.events.TransactionAddedEvent
-import com.financetracker.domain.account.events.TransactionDeletedEvent
 import com.financetracker.domain.account.model.TransactionType
-import com.financetracker.infrastructure.adapters.outbound.persistence.entity.AccountBalance
-import com.financetracker.infrastructure.adapters.outbound.persistence.entity.TransactionView
-import com.financetracker.infrastructure.adapters.outbound.persistence.respository.AccountBalanceRepository
+import com.financetracker.infrastructure.adapters.outbound.persistence.entity.account.Account
+import com.financetracker.infrastructure.adapters.outbound.persistence.entity.account.Transaction
+import com.financetracker.infrastructure.adapters.outbound.persistence.respository.AccountRepository
 import com.financetracker.infrastructure.adapters.outbound.persistence.respository.TransactionRepository
 import org.axonframework.eventhandling.EventHandler
 import org.axonframework.queryhandling.QueryHandler
@@ -16,53 +16,53 @@ import org.springframework.stereotype.Component
 import kotlin.jvm.optionals.getOrElse
 
 @Component
-class AccountBalanceProjection(
-    val accountBalanceRepository: AccountBalanceRepository,
+class AccountProjection(
+    val accountRepository: AccountRepository,
     val transactionRepository: TransactionRepository
 ) {
 
   @EventHandler
   fun on(event: AccountCreatedEvent) {
     val accountBalance =
-        AccountBalance().apply {
-          accountId = event.accountId
+        Account().apply {
+          id = event.accountId
           balance = event.initialBalance.value
+          org = event.org.toString()
+          type = event.type.toString()
         }
-    accountBalanceRepository.save(accountBalance)
+    accountRepository.save(accountBalance)
   }
 
-  @EventHandler
-  fun on(event: TransactionDeletedEvent) {
-    val accountBalance =
-        accountBalanceRepository.findByAccountId(event.accountId).getOrElse {
-          throw RuntimeException()
-        }
-
-    when (event.type) {
-      TransactionType.DEBIT -> accountBalance.balance += event.amount.value
-      TransactionType.CREDIT -> accountBalance.balance -= event.amount.value
-    }
-
-    val transaction = transactionRepository.findById(event.transactionId).get()
-    transaction.deleted = true
-    transactionRepository.save(transaction)
-
-    accountBalanceRepository.save(accountBalance)
-  }
-
+  //  @EventHandler
+  //  fun on(event: TransactionDeletedEvent) {
+  //    val account =
+  //        accountBalanceRepository.findByAccountId(event.accountId).getOrElse {
+  //          throw RuntimeException()
+  //        }
+  //
+  //    when (event.type) {
+  //      TransactionType.DEBIT -> accountBalance.balance += event.amount.value
+  //      TransactionType.CREDIT -> accountBalance.balance -= event.amount.value
+  //    }
+  //
+  //    val transaction = transactionRepository.findById(event.transactionId).get()
+  //    transaction.deleted = true
+  //    transactionRepository.save(transaction)
+  //
+  //    accountBalanceRepository.save(accountBalance)
+  //  }
+  //
   @EventHandler
   fun on(event: TransactionAddedEvent) {
     val accountBalance =
-        accountBalanceRepository.findByAccountId(event.accountId).getOrElse {
-          throw RuntimeException()
-        }
+        accountRepository.findById(event.accountId).getOrElse { throw RuntimeException() }
 
     when (event.type) {
       TransactionType.DEBIT -> accountBalance.balance -= event.amount.value
       TransactionType.CREDIT -> accountBalance.balance += event.amount.value
     }
     accountBalance.transactions.add(
-        TransactionView().apply {
+        Transaction().apply {
           id = event.transactionId
           type = event.type
           category = event.details.category
@@ -71,18 +71,26 @@ class AccountBalanceProjection(
           occurredOn = event.details.occurredOn
         })
 
-    accountBalanceRepository.save(accountBalance)
+    accountRepository.save(accountBalance)
   }
 
   @QueryHandler
   fun getBalances(query: AccountBalancesQuery): List<AccountBalanceView> {
-    val balanceList = accountBalanceRepository.findAll()
-    return balanceList.map { AccountBalanceView(it.accountId, it.balance) }
+    val balanceList = accountRepository.findAll()
+    return balanceList.map { AccountBalanceView(it.id, it.balance) }
+  }
+
+  @QueryHandler
+  fun getAccounts(query: AccountListQuery): List<AccountView> {
+    val accountList = accountRepository.findAll()
+    return accountList.map {
+      AccountView(accountId = it.id, org = it.org, type = it.type, balance = it.balance)
+    }
   }
 
   @QueryHandler
   fun getTransactions(query: TransactionsForMonthQuery): List<MonthTransactionsView> {
-    val accountList = accountBalanceRepository.findAll()
+    val accountList = accountRepository.findAll()
     return accountList
         .map { account ->
           account.transactions
@@ -95,7 +103,7 @@ class AccountBalanceProjection(
               .map {
                 MonthTransactionsView(
                     id = it.id,
-                    account = account.accountId,
+                    account = account.id,
                     amount = it.amount,
                     description = it.description,
                     category = it.category,

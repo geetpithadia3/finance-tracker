@@ -1,7 +1,8 @@
 package com.financetracker.application
 
-import com.financetracker.application.commands.AddTransactionCommand
 import com.financetracker.application.commands.FetchMonthSplitwiseTransactionsCommand
+import com.financetracker.application.commands.SyncSplitwiseTransactions
+import com.financetracker.application.commands.account.AddTransactionCommand
 import com.financetracker.domain.account.model.Category
 import com.financetracker.domain.account.model.TransactionType
 import com.financetracker.domain.account.valueObjects.Currency
@@ -10,6 +11,7 @@ import com.financetracker.domain.account.valueObjects.TransactionDetails
 import com.financetracker.infrastructure.adapters.outbound.persistence.entity.SplitwiseTransaction
 import com.financetracker.infrastructure.adapters.outbound.persistence.respository.SplitwiseTransactionRepository
 import com.financetracker.infrastructure.adapters.outbound.splitwise.SplitwiseService
+import com.financetracker.infrastructure.adapters.outbound.splitwise.dto.Expense
 import com.financetracker.infrastructure.adapters.outbound.splitwise.dto.SplitwiseExpense
 import org.axonframework.commandhandling.gateway.CommandGateway
 import org.springframework.stereotype.Service
@@ -49,6 +51,40 @@ class SplitwiseApplicationService(
                                 description = expense.description,
                                 category = mapCategory(expense.category.name),
                                 occurredOn = expense.date.toLocalDate())))
+              }
+        }
+  }
+
+  fun syncExpenses(request: SyncSplitwiseTransactions): List<Expense> {
+    val userId: Long = 15110641
+    val lastUpdatedOn = splitwiseTransactionRepository.findLastUpdatedDate()
+    val expenseList =
+        splitwiseService.getExpensesBetween(
+            lastUpdatedOn ?: Year.now().atMonth(1).atDay(1), LocalDate.now())
+    return expenseList.expenses
+        .filter { isExpenseNotSynced(it) }
+        .flatMap { expense ->
+          expense.users
+              .filter { it.userId == userId }
+              .map { ue ->
+                syncExpense(expense)
+                Expense(
+                    amount = ue.owedShare.toDouble(),
+                    date = expense.date.toLocalDate(),
+                    description = expense.description,
+                    category = mapCategory(expense.category.name).toString(),
+                    type = TransactionType.DEBIT.toString())
+                //                commandGateway.send<AddTransactionCommand>(
+                //                    AddTransactionCommand(
+                //                        accountId = request.account,
+                //                        transactionId = UUID.randomUUID().toString(),
+                //                        type = TransactionType.DEBIT,
+                //                        amount = Money(ue.owedShare.toDouble(), Currency.CAD),
+                //                        details =
+                //                            TransactionDetails(
+                //                                description = expense.description,
+                //                                category = mapCategory(expense.category.name),
+                //                                occurredOn = expense.date.toLocalDate())))
               }
         }
   }

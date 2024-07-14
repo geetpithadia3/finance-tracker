@@ -1,4 +1,4 @@
-package com.financetracker.application.commands
+package com.financetracker.application.commands.account
 
 import com.financetracker.domain.account.model.AccountType
 import com.financetracker.domain.account.model.Organization

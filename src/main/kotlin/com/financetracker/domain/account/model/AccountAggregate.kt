@@ -1,8 +1,8 @@
 package com.financetracker.domain.account.model
 
-import com.financetracker.application.commands.AddTransactionCommand
-import com.financetracker.application.commands.CreateAccountCommand
-import com.financetracker.application.commands.DeleteTransactionCommand
+import com.financetracker.application.commands.account.AddTransactionCommand
+import com.financetracker.application.commands.account.CreateAccountCommand
+import com.financetracker.application.commands.account.DeleteTransactionCommand
 import com.financetracker.domain.account.events.AccountCreatedEvent
 import com.financetracker.domain.account.events.TransactionAddedEvent
 import com.financetracker.domain.account.events.TransactionDeletedEvent

@@ -1,8 +1,9 @@
 package com.financetracker.infrastructure.adapters.inbound
 
 import com.financetracker.application.AccountApplicationService
-import com.financetracker.application.queries.AccountBalancesQuery
+import com.financetracker.application.queries.account.AccountListQuery
 import com.financetracker.domain.account.projections.AccountBalanceView
+import com.financetracker.domain.account.projections.AccountView
 import com.financetracker.infrastructure.adapters.inbound.dto.AddTransactionRequest
 import com.financetracker.infrastructure.adapters.inbound.dto.CreateAccountRequest
 import org.springframework.http.ResponseEntity
@@ -20,8 +21,8 @@ class AccountController(val accountApplicationService: AccountApplicationService
   }
 
   @GetMapping("/account")
-  fun balances(): ResponseEntity<List<AccountBalanceView>> {
-    return ResponseEntity.ok(accountApplicationService.getAccounts(AccountBalancesQuery()))
+  fun balances(): ResponseEntity<List<AccountView>> {
+    return ResponseEntity.ok(accountApplicationService.getAccounts(AccountListQuery()))
   }
 
   @PostMapping("/transactions")
