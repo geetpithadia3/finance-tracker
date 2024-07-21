@@ -11,5 +11,6 @@ enum class Category {
   TRAVEL,
   SPORTS,
   GENERAL,
-  TRANSFER
+  TRANSFER,
+  INVESTMENT
 }

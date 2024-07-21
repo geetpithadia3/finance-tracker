@@ -12,6 +12,8 @@ services:
       - 5432:5432
     networks:
       - my_network
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
   tracker-app:
     build:
@@ -31,3 +33,7 @@ services:
 
 networks:
   my_network:
+
+volumes:
+  postgres_data:
+    driver: local
