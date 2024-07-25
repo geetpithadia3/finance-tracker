@@ -1,0 +1,39 @@
+version: '3.9'
+
+services:
+
+  postgres:
+    image: postgres:latest
+    container_name: postgres_container
+    environment:
+      - POSTGRES_DB=finance-tracker-db
+      - POSTGRES_PASSWORD=admin
+    ports:
+      - 5432:5432
+    networks:
+      - my_network
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  tracker-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: finance-tracker
+    environment:
+      DB_URL: jdbc:postgresql://postgres_container:5432/finance-tracker-db
+      DB_USER: postgres
+      DB_PASS: admin
+    ports:
+      - 8080:8080
+    depends_on:
+      - postgres
+    networks:
+      - my_network
+
+networks:
+  my_network:
+
+volumes:
+  postgres_data:
+    driver: local
