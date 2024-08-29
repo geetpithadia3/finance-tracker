@@ -1,13 +1,14 @@
 package com.financetracker.domain.account.projections
 
+import com.financetracker.application.dto.response.AccountBalanceResponse
 import com.financetracker.application.queries.TransactionsForMonthQuery
 import com.financetracker.application.queries.account.AccountBalancesQuery
 import com.financetracker.application.queries.account.AccountListQuery
 import com.financetracker.domain.account.events.AccountCreatedEvent
 import com.financetracker.domain.account.events.TransactionAddedEvent
 import com.financetracker.domain.account.model.TransactionType
-import com.financetracker.infrastructure.adapters.outbound.persistence.entity.account.Account
-import com.financetracker.infrastructure.adapters.outbound.persistence.entity.account.Transaction
+import com.financetracker.infrastructure.adapters.outbound.persistence.entity.AccountEntity
+import com.financetracker.infrastructure.adapters.outbound.persistence.entity.TransactionEntity
 import com.financetracker.infrastructure.adapters.outbound.persistence.respository.AccountRepository
 import com.financetracker.infrastructure.adapters.outbound.persistence.respository.TransactionRepository
 import org.axonframework.eventhandling.EventHandler
@@ -24,7 +25,7 @@ class AccountProjection(
   @EventHandler
   fun on(event: AccountCreatedEvent) {
     val accountBalance =
-        Account().apply {
+        AccountEntity().apply {
           id = event.accountId
           balance = event.initialBalance.value
           org = event.org.toString()
@@ -62,7 +63,7 @@ class AccountProjection(
       TransactionType.CREDIT -> accountBalance.balance += event.amount.value
     }
     accountBalance.transactions.add(
-        Transaction().apply {
+        TransactionEntity().apply {
           id = event.transactionId
           type = event.type
           category = event.details.category
@@ -75,9 +76,9 @@ class AccountProjection(
   }
 
   @QueryHandler
-  fun getBalances(query: AccountBalancesQuery): List<AccountBalanceView> {
+  fun getBalances(query: AccountBalancesQuery): List<AccountBalanceResponse> {
     val balanceList = accountRepository.findAll()
-    return balanceList.map { AccountBalanceView(it.id, it.balance) }
+    return balanceList.map { AccountBalanceResponse(it.id, it.balance) }
   }
 
   @QueryHandler

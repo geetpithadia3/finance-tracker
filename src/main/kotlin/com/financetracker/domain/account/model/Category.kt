@@ -12,5 +12,7 @@ enum class Category {
   SPORTS,
   GENERAL,
   TRANSFER,
+  CAR,
+  GROCERY,
   INVESTMENT
 }

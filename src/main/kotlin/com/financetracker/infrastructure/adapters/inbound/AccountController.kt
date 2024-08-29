@@ -1,38 +1,62 @@
 package com.financetracker.infrastructure.adapters.inbound
 
 import com.financetracker.application.AccountApplicationService
-import com.financetracker.application.queries.account.AccountListQuery
-import com.financetracker.domain.account.projections.AccountBalanceView
-import com.financetracker.domain.account.projections.AccountView
-import com.financetracker.infrastructure.adapters.inbound.dto.AddTransactionRequest
-import com.financetracker.infrastructure.adapters.inbound.dto.CreateAccountRequest
+import com.financetracker.application.dto.request.CreateAccountRequest
+import com.financetracker.application.dto.response.AccountBalanceResponse
+import com.financetracker.application.ports.input.AccountManagementUseCase
+import com.financetracker.domain.model.User
+import com.financetracker.infrastructure.adapters.outbound.persistence.entity.UserEntity
+import com.financetracker.infrastructure.adapters.outbound.persistence.respository.UserRepository
 import org.springframework.http.ResponseEntity
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-class AccountController(val accountApplicationService: AccountApplicationService) {
+class AccountController(
+    val accountManagementUseCase: AccountManagementUseCase,
+    val accountApplicationService: AccountApplicationService,
+    val userRepository: UserRepository
+) {
 
   @PostMapping("/account")
-  fun create(@RequestBody request: CreateAccountRequest): ResponseEntity<AccountBalanceView> {
-    return ResponseEntity.ok(accountApplicationService.createAccount(request))
+  fun create(@RequestBody request: CreateAccountRequest): ResponseEntity<AccountBalanceResponse> {
+    val user = getCurrentUser()
+    return ResponseEntity.ok(
+        accountManagementUseCase.create(
+            request, User(username = user.username, password = user.password)))
   }
 
   @GetMapping("/account")
-  fun balances(): ResponseEntity<List<AccountView>> {
-    return ResponseEntity.ok(accountApplicationService.getAccounts(AccountListQuery()))
+  fun balances(): ResponseEntity<List<AccountBalanceResponse>> {
+    val user = getCurrentUser()
+    return ResponseEntity.ok(
+        accountManagementUseCase.list(User(username = user.username, password = user.password)))
   }
 
-  @PostMapping("/transactions")
-  fun addTransactions(@RequestBody request: List<AddTransactionRequest>): ResponseEntity<Unit> {
-    accountApplicationService.addTransactions(request)
-    return ResponseEntity.ok().build()
+  //  @DeleteMapping("/account")
+  //  fun deleteAccount(@PathVariable account: String): ResponseEntity<Unit> {
+  //    val user = getCurrentUser()
+  //    return ResponseEntity.ok(accountApplicationService.deleteAccount(account, user))
+  //  }
+
+  @PostMapping("/transaction/delete")
+  fun deleteAccount(@RequestBody transactions: List<String>): ResponseEntity<Unit> {
+    val user = getCurrentUser()
+    return ResponseEntity.ok(accountApplicationService.deleteTransactions(transactions, user))
   }
 
-  @GetMapping("/categories")
-  fun listCategories(): ResponseEntity<List<String>> {
-    return ResponseEntity.ok(accountApplicationService.listCategories())
+  //  @PostMapping("/transactions")
+  //  fun addTransactions(@RequestBody request: List<AddTransactionRequest>): ResponseEntity<Unit> {
+  //    val user = getCurrentUser()
+  //    accountApplicationService.addTransactions(request, user)
+  //    return ResponseEntity.ok().build()
+  //  }
+  private fun getCurrentUser(): UserEntity {
+    val authentication = SecurityContextHolder.getContext().authentication
+    val username = authentication.name
+    return userRepository.findByUsername(username) ?: throw RuntimeException("User not found")
   }
 }

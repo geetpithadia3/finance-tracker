@@ -6,7 +6,7 @@ import com.financetracker.domain.goal.event.GoalProgressUpdated
 import com.financetracker.infrastructure.adapters.outbound.persistence.entity.goal.Goal
 import com.financetracker.infrastructure.adapters.outbound.persistence.entity.goal.GoalUpdate
 import com.financetracker.infrastructure.adapters.outbound.persistence.respository.GoalRepository
-import com.financetracker.infrastructure.adapters.outbound.persistence.respository.PayScheduleRepository
+import com.financetracker.infrastructure.adapters.outbound.persistence.respository.goal.PayScheduleRepository
 import org.axonframework.eventhandling.EventHandler
 import org.axonframework.queryhandling.QueryHandler
 import org.springframework.stereotype.Component

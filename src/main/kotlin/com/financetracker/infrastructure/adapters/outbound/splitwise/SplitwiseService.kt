@@ -3,7 +3,7 @@ package com.financetracker.infrastructure.adapters.outbound.splitwise
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.financetracker.infrastructure.adapters.outbound.splitwise.dto.ExpenseList
+import com.financetracker.infrastructure.adapters.outbound.splitwise.dto.SplitwiseExpenseList
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.springframework.beans.factory.annotation.Value
@@ -16,7 +16,7 @@ class SplitwiseService {
   @Value("\${app.splitwise.api.key}") lateinit var splitwiseApiKey: String
   @Value("\${app.splitwise.api.url}") lateinit var splitwiseApiUrl: String
 
-  fun getExpensesBetween(datedAfter: LocalDate, datedBefore: LocalDate): ExpenseList {
+  fun getExpensesBetween(datedAfter: LocalDate, datedBefore: LocalDate): SplitwiseExpenseList {
     val client = OkHttpClient()
     val request =
         Request.Builder()
@@ -28,6 +28,6 @@ class SplitwiseService {
     val mapper =
         jacksonObjectMapper().setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
     mapper.registerModules(JavaTimeModule())
-    return mapper.readValue(expensesJson, ExpenseList::class.java)
+    return mapper.readValue(expensesJson, SplitwiseExpenseList::class.java)
   }
 }

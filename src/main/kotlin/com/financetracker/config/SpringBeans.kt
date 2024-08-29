@@ -18,37 +18,31 @@ import org.springframework.stereotype.Component
 
 @Component
 class SpringBeans {
+    fun jacksonObjectMapper(): ObjectMapper {
+        val mapper = jacksonObjectMapper()
+        mapper.registerModule(JavaTimeModule())
+        return mapper
+    }
 
-  fun jacksonObjectMapper(): ObjectMapper {
-    val mapper = jacksonObjectMapper()
-    mapper.registerModule(JavaTimeModule())
-    return mapper
-  }
+    @Bean
+    fun storageEngine(
+        serializer: Serializer,
+        entityManagerProvider: EntityManagerProvider,
+        jpaTransactionManager: JpaTransactionManager,
+    ): EventStorageEngine =
+        JpaEventStorageEngine
+            .builder()
+            .eventSerializer(serializer)
+            .entityManagerProvider(entityManagerProvider)
+            .transactionManager(SpringTransactionManager(jpaTransactionManager))
+            .build()
 
-  @Bean
-  fun storageEngine(
-      serializer: Serializer,
-      entityManagerProvider: EntityManagerProvider,
-      jpaTransactionManager: JpaTransactionManager
-  ): EventStorageEngine {
-    return JpaEventStorageEngine.builder()
-        .eventSerializer(serializer)
-        .entityManagerProvider(entityManagerProvider)
-        .transactionManager(SpringTransactionManager(jpaTransactionManager))
-        .build()
-  }
+    @Bean
+    fun entityManagerProvider(entityManager: EntityManager): EntityManagerProvider = EntityManagerProvider { entityManager }
 
-  @Bean
-  fun entityManagerProvider(entityManager: EntityManager): EntityManagerProvider {
-    return EntityManagerProvider { entityManager }
-  }
+    @Bean
+    fun transactionManager(entityManagerFactory: EntityManagerFactory): JpaTransactionManager = JpaTransactionManager(entityManagerFactory)
 
-  @Bean
-  fun transactionManager(entityManagerFactory: EntityManagerFactory): JpaTransactionManager =
-      JpaTransactionManager(entityManagerFactory)
-
-  @Bean
-  fun snapshotTriggerDefinition(snapshotter: Snapshotter): SnapshotTriggerDefinition {
-    return EventCountSnapshotTriggerDefinition(snapshotter, 2)
-  }
+    @Bean
+    fun snapshotTriggerDefinition(snapshotter: Snapshotter): SnapshotTriggerDefinition = EventCountSnapshotTriggerDefinition(snapshotter, 2)
 }

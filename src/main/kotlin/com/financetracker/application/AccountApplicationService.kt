@@ -1,100 +1,83 @@
 package com.financetracker.application
 
-import com.financetracker.application.commands.account.AddTransactionCommand
-import com.financetracker.application.commands.account.CreateAccountCommand
-import com.financetracker.application.queries.TransactionsForMonthQuery
+import com.financetracker.application.dto.request.AddTransactionRequest
+import com.financetracker.application.dto.request.CreateAccountRequest
+import com.financetracker.application.dto.response.AccountBalanceResponse
 import com.financetracker.application.queries.account.AccountListQuery
-import com.financetracker.domain.account.model.AccountType
 import com.financetracker.domain.account.model.Category
-import com.financetracker.domain.account.model.Organization
 import com.financetracker.domain.account.model.TransactionType
-import com.financetracker.domain.account.projections.AccountBalanceView
 import com.financetracker.domain.account.projections.AccountView
-import com.financetracker.domain.account.projections.MonthTransactionsView
-import com.financetracker.domain.account.valueObjects.Currency
-import com.financetracker.domain.account.valueObjects.Money
-import com.financetracker.domain.account.valueObjects.TransactionDetails
-import com.financetracker.infrastructure.adapters.inbound.dto.AddTransactionRequest
-import com.financetracker.infrastructure.adapters.inbound.dto.CreateAccountRequest
-import org.axonframework.commandhandling.gateway.CommandGateway
-import org.axonframework.messaging.responsetypes.ResponseTypes
-import org.axonframework.queryhandling.QueryGateway
+import com.financetracker.infrastructure.adapters.outbound.persistence.entity.AccountEntity
+import com.financetracker.infrastructure.adapters.outbound.persistence.entity.TransactionEntity
+import com.financetracker.infrastructure.adapters.outbound.persistence.entity.UserEntity
+import com.financetracker.infrastructure.adapters.outbound.persistence.respository.AccountRepository
+import com.financetracker.infrastructure.adapters.outbound.persistence.respository.account.TransactionRepository
 import org.springframework.stereotype.Service
 import java.util.*
 
 @Service
 class AccountApplicationService(
-    val commandGateway: CommandGateway,
-    val queryGateway: QueryGateway
+    val accountRepository: AccountRepository,
+    val transactionRepository: TransactionRepository
 ) {
 
-  fun createAccount(request: CreateAccountRequest): AccountBalanceView {
+  fun createAccount(request: CreateAccountRequest, user: UserEntity): AccountBalanceResponse {
     val accountId = request.org + "_" + request.type
-    commandGateway.send<CreateAccountCommand>(
-        CreateAccountCommand(
-            accountId = accountId,
-            type = AccountType.valueOf(request.type.uppercase()),
-            org = Organization.valueOf(request.org.uppercase()),
-            initialBalance =
-                Money(request.initialBalance, Currency.valueOf(request.currency.uppercase()))))
-
-    return AccountBalanceView(accountId, request.initialBalance)
-  }
-
-  fun getAccounts(query: AccountListQuery): List<AccountView> {
-    return queryGateway
-        .query(query, ResponseTypes.multipleInstancesOf(AccountView::class.java))
-        .get()
-  }
-
-  fun getTransactions(query: TransactionsForMonthQuery): List<MonthTransactionsView> {
-    return queryGateway
-        .query(query, ResponseTypes.multipleInstancesOf(MonthTransactionsView::class.java))
-        .get()
-  }
-
-  fun addTransactions(request: List<AddTransactionRequest>): List<AddTransactionRequest> {
-    request
-        .filter { it.type.uppercase() != "TRANSFER" }
-        .map {
-          AddTransactionCommand(
-              accountId = it.accountId,
-              transactionId = UUID.randomUUID().toString(),
-              type = TransactionType.valueOf(it.type.uppercase()),
-              amount = Money(it.amount, Currency.CAD),
-              details =
-                  TransactionDetails(
-                      description = it.description,
-                      category = Category.valueOf(it.category.uppercase()),
-                      occurredOn = it.occurredOn))
+    val account =
+        AccountEntity().apply {
+          id = accountId
+          type = request.type
+          org = request.org
+          balance = request.initialBalance
+          this.user = user
         }
-        .forEach { commandGateway.send<AddTransactionCommand>(it) }
-    request
-        .filter { it.type.uppercase() == "TRANSFER" }
-        .forEach {
-          commandGateway.send<AddTransactionCommand>(
-              AddTransactionCommand(
-                  accountId = it.accountId,
-                  transactionId = UUID.randomUUID().toString(),
-                  type = TransactionType.DEBIT,
-                  amount = Money(it.amount, Currency.CAD),
-                  details =
-                      TransactionDetails(
-                          description = "TRANSFER",
-                          category = Category.valueOf(it.category.uppercase()),
-                          occurredOn = it.occurredOn)))
-          commandGateway.send<AddTransactionCommand>(
-              AddTransactionCommand(
-                  accountId = it.toAccount!!,
-                  transactionId = UUID.randomUUID().toString(),
-                  type = TransactionType.CREDIT,
-                  amount = Money(it.amount, Currency.CAD),
-                  details =
-                      TransactionDetails(
-                          description = "TRANSFER",
-                          category = Category.valueOf(it.category.uppercase()),
-                          occurredOn = it.occurredOn)))
-        }
+
+    accountRepository.save(account)
+
+    return AccountBalanceResponse(accountId, request.initialBalance)
+  }
+
+  fun getAccounts(query: AccountListQuery, user: UserEntity): List<AccountView> {
+    return accountRepository.findByUser(user).map {
+      AccountView(accountId = it.id, org = it.org, type = it.type, balance = it.balance)
+    }
+  }
+
+  //  fun deleteAccount(accountId: String, user: User) {
+  //    val account = accountRepository.findByIdAndUser(accountId, user)
+  //    account?.let { accountRepository.delete(it) }
+  //  }
+
+  fun deleteTransactions(transactions: List<String>, user: UserEntity) {
+    transactions.forEach {
+      val transaction = transactionRepository.findById(it).orElse(null)
+      if (transaction != null && transaction.account?.user == user) {
+        transactionRepository.delete(transaction)
+      }
+    }
+  }
+
+  fun addTransactions(
+      request: List<AddTransactionRequest>,
+      user: UserEntity
+  ): List<AddTransactionRequest> {
+    request.mapNotNull {
+      val account = accountRepository.findByIdAndUser(it.accountId, user)
+      account?.let { acc ->
+        val transaction =
+            TransactionEntity().apply {
+              id = UUID.randomUUID().toString()
+              type = TransactionType.valueOf(it.type.uppercase())
+              category = Category.valueOf(it.category.uppercase())
+              description = it.description
+              amount = it.amount
+              occurredOn = it.occurredOn
+              this.account = acc
+            }
+        transactionRepository.save(transaction)
+        it
+      }
+    }
 
     return request
   }

@@ -14,10 +14,11 @@ data class SplitwiseExpense(
     val users: List<UserExpense>,
     val date: LocalDateTime,
     val category: SplitwiseCategory,
-    val description: String
+    val description: String,
+    val updatedAt: LocalDateTime
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true) data class SplitwiseCategory(val name: String)
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class ExpenseList(val expenses: List<SplitwiseExpense>)
+data class SplitwiseExpenseList(val expenses: List<SplitwiseExpense>)

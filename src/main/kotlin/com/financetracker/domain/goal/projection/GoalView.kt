@@ -9,6 +9,5 @@ data class GoalView(
     val description: String,
     val amountProgress: Double,
     val amountTarget: Double,
-    val targetDate: LocalDate,
-    val amountPerPayPeriod: Double
+    val targetDate: LocalDate
 )

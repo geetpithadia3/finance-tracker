@@ -1,38 +1,31 @@
 package com.financetracker.infrastructure.adapters.inbound
 
-import com.financetracker.application.GoalsService
+import com.financetracker.application.GoalService
 import com.financetracker.domain.goal.projection.GoalView
 import com.financetracker.infrastructure.adapters.inbound.dto.AddGoalRequest
-import com.financetracker.infrastructure.adapters.inbound.dto.PayScheduleRequest
 import com.financetracker.infrastructure.adapters.inbound.dto.UpdateGoalRequest
-import com.financetracker.infrastructure.adapters.outbound.persistence.entity.PaySchedule
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
+import java.util.*
 
 @RestController
-class GoalsController(val goalsService: GoalsService) {
+@RequestMapping("/goals")
+class GoalController(private val goalService: GoalService) {
 
-  @PostMapping("/goal")
-  fun add(@RequestBody addGoalRequest: AddGoalRequest): ResponseEntity<Unit> {
-    return ResponseEntity.ok(goalsService.addGoal(request = addGoalRequest))
-  }
+    @PostMapping
+    fun addGoal(@RequestBody request: AddGoalRequest): ResponseEntity<UUID> {
+        val goalId = goalService.addGoal(request)
+        return ResponseEntity.ok(goalId)
+    }
 
-  @GetMapping("/goal")
-  fun list(): ResponseEntity<List<GoalView>> {
-    return ResponseEntity.ok(goalsService.list())
-  }
+    @PutMapping
+    fun updateGoal(@RequestBody request: UpdateGoalRequest): ResponseEntity<Unit> {
+        goalService.updateGoal(request)
+        return ResponseEntity.ok().build()
+    }
 
-  @PostMapping("/goal/update")
-  fun updateProgress(@RequestBody request: UpdateGoalRequest): ResponseEntity<Unit> {
-    goalsService.updateGoal(request)
-    return ResponseEntity.ok().build()
-  }
-
-  @PostMapping("/pay-schedule")
-  fun paySchedule(@RequestBody request: PayScheduleRequest): ResponseEntity<PaySchedule> {
-    return ResponseEntity.ok(goalsService.addPaySchedule(request))
-  }
+    @GetMapping
+    fun list(): ResponseEntity<List<GoalView>> {
+        return ResponseEntity.ok(goalService.list())
+    }
 }

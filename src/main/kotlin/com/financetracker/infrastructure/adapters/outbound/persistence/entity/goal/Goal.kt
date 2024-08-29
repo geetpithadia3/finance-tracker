@@ -1,20 +1,23 @@
 package com.financetracker.infrastructure.adapters.outbound.persistence.entity.goal
 
-import jakarta.persistence.CascadeType
-import jakarta.persistence.Entity
-import jakarta.persistence.Id
-import jakarta.persistence.OneToMany
+import com.financetracker.infrastructure.adapters.outbound.persistence.entity.UserEntity
+import jakarta.persistence.*
 import java.time.LocalDate
 import java.util.*
 
 @Entity
 class Goal {
-  @Id lateinit var id: UUID
-  var amountProgress: Double = 0.0
-  var amountTarget: Double = 0.0
-  lateinit var targetDate: LocalDate
+  @Id @GeneratedValue(strategy = GenerationType.UUID) lateinit var id: UUID
+
   lateinit var name: String
+
   lateinit var description: String
-  @OneToMany(cascade = [CascadeType.ALL], orphanRemoval = true)
-  var updates: MutableList<GoalUpdate> = mutableListOf()
+
+  lateinit var targetDate: LocalDate
+
+  var amountProgress: Double = 0.0
+
+  var amountTarget: Double = 0.0
+
+  @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "user_id") lateinit var user: UserEntity
 }

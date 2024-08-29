@@ -1,15 +1,16 @@
-package com.financetracker.infrastructure.adapters.outbound.persistence.entity
+package com.financetracker.infrastructure.adapters.outbound.persistence.entity.goal
 
-import jakarta.persistence.Entity
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
-import jakarta.persistence.Id
+import com.financetracker.infrastructure.adapters.outbound.persistence.entity.UserEntity
+import jakarta.persistence.*
 import java.time.LocalDate
-import java.util.*
 
 @Entity
-class PaySchedule() {
-  @Id @GeneratedValue(strategy = GenerationType.UUID) lateinit var id: UUID
+class PaySchedule {
+  @Id @GeneratedValue(strategy = GenerationType.IDENTITY) var id: Long? = null
+
   lateinit var startDate: LocalDate
-  var frequency: Int = 1
+
+  var frequency: Int = 0
+
+  @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "user_id") lateinit var user: UserEntity
 }

@@ -1,6 +1,8 @@
 package com.financetracker.domain.account.model
 
 enum class TransactionType {
-  CREDIT,
-  DEBIT
+  EXPENSE,
+  INCOME,
+  TRANSFER_DEBIT,
+  TRANSFER_CREDIT
 }

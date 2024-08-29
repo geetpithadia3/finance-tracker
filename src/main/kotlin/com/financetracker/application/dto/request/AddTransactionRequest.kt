@@ -1,4 +1,4 @@
-package com.financetracker.infrastructure.adapters.inbound.dto
+package com.financetracker.application.dto.request
 
 import java.time.LocalDate
 
