@@ -1,6 +1,6 @@
 package com.financetracker.application.commands.goal
 
-import org.axonframework.modelling.command.TargetAggregateIdentifier
+// import org.axonframework.modelling.command.TargetAggregateIdentifier
 import java.time.LocalDate
 import java.util.*
 
@@ -14,7 +14,7 @@ data class CreateGoalCommand(
 )
 
 data class UpdateGoalProgressCommand(
-    @TargetAggregateIdentifier val goalId: UUID,
+    val goalId: UUID,
     val amount: Double,
     val updatedOn: LocalDate
 )

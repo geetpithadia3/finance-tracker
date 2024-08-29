@@ -1,12 +1,11 @@
 package com.financetracker.infrastructure.adapters.outbound.persistence
 
 import com.financetracker.application.ports.output.TransactionPersistence
+import com.financetracker.domain.account.model.Category
 import com.financetracker.domain.account.model.TransactionType
 import com.financetracker.domain.model.Account
-import com.financetracker.domain.model.Category
 import com.financetracker.domain.model.Transaction
 import com.financetracker.infrastructure.adapters.outbound.persistence.entity.AccountEntity
-import com.financetracker.infrastructure.adapters.outbound.persistence.entity.CategoryEntity
 import com.financetracker.infrastructure.adapters.outbound.persistence.entity.TransactionEntity
 import com.financetracker.infrastructure.adapters.outbound.persistence.respository.TransactionRepository
 import org.springframework.stereotype.Service
@@ -21,7 +20,7 @@ class TransactionAdapter(val transactionRepository: TransactionRepository) :
         .save(
             TransactionEntity().apply {
               type = transaction.type
-              category = CategoryEntity().apply { name = transaction.category.name }
+              category = transaction.category
               description = transaction.description
               amount = transaction.amount
               occurredOn = transaction.occurredOn
@@ -51,7 +50,7 @@ class TransactionAdapter(val transactionRepository: TransactionRepository) :
               occurredOn = it.occurredOn,
               amount = it.amount,
               account = it.account.id,
-              category = Category(it.category.name),
+              category = Category.valueOf(it.category.name),
               lastSyncedAt = it.lastSyncedOn)
         }
   }
@@ -69,7 +68,7 @@ class TransactionAdapter(val transactionRepository: TransactionRepository) :
           occurredOn = it.occurredOn,
           amount = it.amount,
           account = it.account.id,
-          category = Category(it.category.name),
+          category = Category.valueOf(it.category.name),
           lastSyncedAt = it.lastSyncedOn)
     }!!
   }

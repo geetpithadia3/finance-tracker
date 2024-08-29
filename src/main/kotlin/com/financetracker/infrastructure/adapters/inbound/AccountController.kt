@@ -1,6 +1,5 @@
 package com.financetracker.infrastructure.adapters.inbound
 
-import com.financetracker.application.AccountApplicationService
 import com.financetracker.application.dto.request.CreateAccountRequest
 import com.financetracker.application.dto.response.AccountBalanceResponse
 import com.financetracker.application.ports.input.AccountManagementUseCase
@@ -17,7 +16,6 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 class AccountController(
     val accountManagementUseCase: AccountManagementUseCase,
-    val accountApplicationService: AccountApplicationService,
     val userRepository: UserRepository
 ) {
 
@@ -41,12 +39,6 @@ class AccountController(
   //    val user = getCurrentUser()
   //    return ResponseEntity.ok(accountApplicationService.deleteAccount(account, user))
   //  }
-
-  @PostMapping("/transaction/delete")
-  fun deleteAccount(@RequestBody transactions: List<String>): ResponseEntity<Unit> {
-    val user = getCurrentUser()
-    return ResponseEntity.ok(accountApplicationService.deleteTransactions(transactions, user))
-  }
 
   //  @PostMapping("/transactions")
   //  fun addTransactions(@RequestBody request: List<AddTransactionRequest>): ResponseEntity<Unit> {

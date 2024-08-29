@@ -24,13 +24,14 @@ class AccountAdapter(val accountRepository: AccountRepository) : AccountPersiste
   }
 
   override fun list(user: User): List<Account> {
-    return accountRepository.findByUser(UserEntity().apply { id = user.id }).map {
-      Account(id = it.id, type = it.type, org = it.org, balance = it.balance, user.id)
+    return accountRepository.findByUser(UserEntity().apply { id = user.id!! }).map {
+      Account(id = it.id, type = it.type, org = it.org, balance = it.balance, user.id!!)
     }
   }
 
   override fun findByIdAndUser(id: String, user: User): Account? {
-    val accountEntity = accountRepository.findByIdAndUser(id, UserEntity().also { it.id = user.id })
+    val accountEntity =
+        accountRepository.findByIdAndUser(id, UserEntity().also { it.id = user.id!! })
 
     return accountEntity?.let {
       Account(
@@ -40,5 +41,9 @@ class AccountAdapter(val accountRepository: AccountRepository) : AccountPersiste
           balance = accountEntity.balance,
           user = accountEntity.user.id!!)
     }
+  }
+
+  override fun findByUser(user: User): List<Account> {
+    TODO("Not yet implemented")
   }
 }

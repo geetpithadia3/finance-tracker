@@ -28,6 +28,7 @@ class TransactionController(
     val username = authentication.name
     val entity = userRepository.findByUsername(username) ?: throw RuntimeException("User not found")
     return User(
+        id = entity.id,
         username = entity.username,
         password = entity.password,
         externalId = entity.externalId,

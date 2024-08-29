@@ -21,7 +21,7 @@ dependencies {
   implementation("io.jsonwebtoken:jjwt-api:0.11.5")
   runtimeOnly("io.jsonwebtoken:jjwt-impl:0.11.5")
   runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5")
-  implementation(platform("org.axonframework:axon-bom:4.9.3"))
+
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("org.springframework.boot:spring-boot-starter-web")
   //    implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
@@ -31,7 +31,6 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
   implementation("org.jetbrains.kotlin:kotlin-reflect")
-  implementation("org.axonframework:axon-spring-boot-starter")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
   implementation("org.springframework.integration:spring-integration-jpa")
   //	implementation("org.springframework.integration:spring-integration-mongodb")

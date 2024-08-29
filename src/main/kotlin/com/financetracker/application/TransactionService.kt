@@ -6,8 +6,8 @@ import com.financetracker.application.ports.input.TransactionManagementUseCase
 import com.financetracker.application.ports.output.AccountPersistence
 import com.financetracker.application.ports.output.SharingService
 import com.financetracker.application.ports.output.TransactionPersistence
+import com.financetracker.domain.account.model.Category
 import com.financetracker.domain.account.model.TransactionType
-import com.financetracker.domain.model.Category
 import com.financetracker.domain.model.SharingTransaction
 import com.financetracker.domain.model.Transaction
 import com.financetracker.domain.model.User
@@ -33,11 +33,10 @@ class TransactionService(
             Transaction(
                 id = Random().nextLong(),
                 type = TransactionType.valueOf(it.type.uppercase()),
-                category = Category(it.category.uppercase()),
+                category = Category.valueOf(it.category.uppercase()),
                 description = it.description,
                 amount = it.amount,
                 occurredOn = it.occurredOn,
-                deleted = false,
                 lastSyncedAt = LocalDateTime.now(),
                 account = acc.id)
         transactionPersistence.save(transaction)
@@ -71,7 +70,7 @@ class TransactionService(
                 occurredOn = transaction.occurredOn,
                 externalId = transaction.id,
                 account = request.accountId,
-                category = Category(transaction.category),
+                category = Category.valueOf(transaction.category.uppercase()),
                 lastSyncedAt = LocalDateTime.now())
 
         transactionPersistence.save(newTransaction)

@@ -1,7 +1,7 @@
 package com.financetracker.application.dto.response
 
+import com.financetracker.domain.account.model.Category
 import com.financetracker.domain.account.model.TransactionType
-import com.financetracker.domain.model.Category
 import java.time.LocalDate
 
 data class ExpenseResponse(

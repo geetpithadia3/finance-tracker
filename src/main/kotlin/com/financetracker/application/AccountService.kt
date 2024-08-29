@@ -18,7 +18,7 @@ class AccountService(val accountPersistence: AccountPersistence) : AccountManage
             type = request.type,
             org = request.org,
             balance = request.initialBalance,
-            user = user.id)
+            user = user.id!!)
 
     accountPersistence.save(account)
 
