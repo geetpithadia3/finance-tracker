@@ -7,10 +7,10 @@ import com.financetracker.domain.model.Account
 import com.financetracker.domain.model.Transaction
 import com.financetracker.infrastructure.adapters.outbound.persistence.entity.AccountEntity
 import com.financetracker.infrastructure.adapters.outbound.persistence.entity.TransactionEntity
-import com.financetracker.infrastructure.adapters.outbound.persistence.respository.TransactionRepository
-import org.springframework.stereotype.Service
+import com.financetracker.infrastructure.adapters.outbound.persistence.repository.TransactionRepository
 import java.time.LocalDate
 import java.time.LocalDateTime
+import org.springframework.stereotype.Service
 
 @Service
 class TransactionAdapter(val transactionRepository: TransactionRepository) :

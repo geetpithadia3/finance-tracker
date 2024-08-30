@@ -5,7 +5,7 @@ import com.financetracker.domain.model.Account
 import com.financetracker.domain.model.User
 import com.financetracker.infrastructure.adapters.outbound.persistence.entity.AccountEntity
 import com.financetracker.infrastructure.adapters.outbound.persistence.entity.UserEntity
-import com.financetracker.infrastructure.adapters.outbound.persistence.respository.AccountRepository
+import com.financetracker.infrastructure.adapters.outbound.persistence.repository.AccountRepository
 import org.springframework.stereotype.Service
 
 @Service

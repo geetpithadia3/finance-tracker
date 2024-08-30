@@ -1,7 +1,5 @@
 package com.financetracker.application
 
-import com.financetracker.application.dto.request.AddTransactionRequest
-import com.financetracker.application.dto.request.SyncAccountRequest
 import com.financetracker.application.ports.input.TransactionManagementUseCase
 import com.financetracker.application.ports.output.AccountPersistence
 import com.financetracker.application.ports.output.SharingService
@@ -11,9 +9,11 @@ import com.financetracker.domain.account.model.TransactionType
 import com.financetracker.domain.model.SharingTransaction
 import com.financetracker.domain.model.Transaction
 import com.financetracker.domain.model.User
-import org.springframework.stereotype.Service
+import com.financetracker.infrastructure.adapters.inbound.dto.request.AddTransactionRequest
+import com.financetracker.infrastructure.adapters.inbound.dto.request.SyncAccountRequest
 import java.time.LocalDateTime
 import java.util.*
+import org.springframework.stereotype.Service
 
 @Service
 class TransactionService(

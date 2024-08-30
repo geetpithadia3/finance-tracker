@@ -1,9 +1,9 @@
 package com.financetracker.infrastructure.adapters.inbound
 
-import com.financetracker.application.dto.request.AddTransactionRequest
 import com.financetracker.application.ports.input.TransactionManagementUseCase
 import com.financetracker.domain.model.User
-import com.financetracker.infrastructure.adapters.outbound.persistence.respository.UserRepository
+import com.financetracker.infrastructure.adapters.inbound.dto.request.AddTransactionRequest
+import com.financetracker.infrastructure.adapters.outbound.persistence.repository.UserRepository
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.annotation.PostMapping

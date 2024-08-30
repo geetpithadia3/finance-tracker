@@ -1,11 +1,11 @@
 package com.financetracker.application
 
-import com.financetracker.application.dto.request.CreateAccountRequest
-import com.financetracker.application.dto.response.AccountBalanceResponse
 import com.financetracker.application.ports.input.AccountManagementUseCase
 import com.financetracker.application.ports.output.AccountPersistence
 import com.financetracker.domain.model.Account
 import com.financetracker.domain.model.User
+import com.financetracker.infrastructure.adapters.inbound.dto.request.CreateAccountRequest
+import com.financetracker.infrastructure.adapters.inbound.dto.response.AccountBalanceResponse
 import org.springframework.stereotype.Service
 
 @Service

@@ -2,7 +2,7 @@ package com.financetracker.infrastructure.adapters.inbound
 
 import com.financetracker.application.ports.input.ExpenseManagementUseCase
 import com.financetracker.infrastructure.adapters.outbound.persistence.entity.UserEntity
-import com.financetracker.infrastructure.adapters.outbound.persistence.respository.UserRepository
+import com.financetracker.infrastructure.adapters.outbound.persistence.repository.UserRepository
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.annotation.RestController
 

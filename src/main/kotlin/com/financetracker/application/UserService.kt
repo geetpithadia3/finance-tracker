@@ -1,10 +1,10 @@
 package com.financetracker.application
 
-import com.financetracker.application.dto.request.LoginRequest
-import com.financetracker.application.dto.request.RegisterRequest
 import com.financetracker.application.ports.input.UserManagementUseCase
 import com.financetracker.application.ports.output.UserPersistence
 import com.financetracker.domain.model.User
+import com.financetracker.infrastructure.adapters.inbound.dto.request.LoginRequest
+import com.financetracker.infrastructure.adapters.inbound.dto.request.RegisterRequest
 import com.financetracker.infrastructure.security.JwtTokenUtil
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken

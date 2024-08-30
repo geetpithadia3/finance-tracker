@@ -1,12 +1,12 @@
 package com.financetracker.application
 
-import com.financetracker.application.dto.request.ListExpensesByMonthRequest
-import com.financetracker.application.dto.response.ExpenseResponse
 import com.financetracker.application.ports.input.ExpenseManagementUseCase
 import com.financetracker.application.ports.output.AccountPersistence
 import com.financetracker.application.ports.output.TransactionPersistence
 import com.financetracker.domain.account.model.TransactionType
 import com.financetracker.domain.model.User
+import com.financetracker.infrastructure.adapters.inbound.dto.request.ListExpensesByMonthRequest
+import com.financetracker.infrastructure.adapters.inbound.dto.response.ExpenseResponse
 import org.springframework.stereotype.Service
 
 @Service

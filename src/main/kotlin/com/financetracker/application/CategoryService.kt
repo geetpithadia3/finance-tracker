@@ -1,8 +1,8 @@
 package com.financetracker.application
 
-import com.financetracker.application.dto.response.CategoryResponse
 import com.financetracker.application.ports.input.CategoryManagementUseCase
 import com.financetracker.domain.account.model.Category
+import com.financetracker.infrastructure.adapters.inbound.dto.response.CategoryResponse
 import org.springframework.stereotype.Service
 
 @Service

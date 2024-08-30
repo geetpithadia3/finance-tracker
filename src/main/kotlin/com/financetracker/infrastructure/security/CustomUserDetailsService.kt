@@ -1,6 +1,6 @@
 package com.financetracker.infrastructure.security
 
-import com.financetracker.infrastructure.adapters.outbound.persistence.respository.UserRepository
+import com.financetracker.infrastructure.adapters.outbound.persistence.repository.UserRepository
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.core.userdetails.UsernameNotFoundException

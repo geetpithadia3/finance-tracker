@@ -1,7 +1,7 @@
 package com.financetracker.application.ports.input
 
-import com.financetracker.application.dto.request.LoginRequest
-import com.financetracker.application.dto.request.RegisterRequest
+import com.financetracker.infrastructure.adapters.inbound.dto.request.LoginRequest
+import com.financetracker.infrastructure.adapters.inbound.dto.request.RegisterRequest
 
 interface UserManagementUseCase {
 

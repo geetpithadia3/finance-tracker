@@ -1,8 +1,8 @@
 package com.financetracker.infrastructure.adapters.inbound
 
-import com.financetracker.application.dto.request.LoginRequest
-import com.financetracker.application.dto.request.RegisterRequest
 import com.financetracker.application.ports.input.UserManagementUseCase
+import com.financetracker.infrastructure.adapters.inbound.dto.request.LoginRequest
+import com.financetracker.infrastructure.adapters.inbound.dto.request.RegisterRequest
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
