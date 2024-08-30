@@ -4,10 +4,11 @@ import com.financetracker.domain.model.PayFrequency
 import com.financetracker.infrastructure.adapters.outbound.persistence.entity.UserEntity
 import jakarta.persistence.*
 import java.time.LocalDate
+import java.util.*
 
 @Entity
 class PayScheduleEntity {
-  @Id @GeneratedValue(strategy = GenerationType.IDENTITY) var id: Long? = null
+  @Id @GeneratedValue(strategy = GenerationType.UUID) var id: UUID? = null
 
   lateinit var startDate: LocalDate
 

@@ -1,10 +1,13 @@
 package com.financetracker.infrastructure.adapters.outbound.persistence.entity
 
 import jakarta.persistence.*
+import java.util.*
 
 @Entity
 class AccountEntity {
-  @Id lateinit var id: String
+  @Id @GeneratedValue(strategy = GenerationType.UUID) lateinit var id: UUID
+
+  @Column(unique = true) lateinit var name: String
 
   @Column lateinit var type: String
 

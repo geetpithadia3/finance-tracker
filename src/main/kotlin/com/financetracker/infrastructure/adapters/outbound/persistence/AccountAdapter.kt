@@ -7,43 +7,48 @@ import com.financetracker.infrastructure.adapters.outbound.persistence.entity.Ac
 import com.financetracker.infrastructure.adapters.outbound.persistence.entity.UserEntity
 import com.financetracker.infrastructure.adapters.outbound.persistence.repository.AccountRepository
 import org.springframework.stereotype.Service
+import java.util.*
 
 @Service
 class AccountAdapter(val accountRepository: AccountRepository) : AccountPersistence {
-  override fun save(account: Account): String {
-    return accountRepository
-        .save(
-            AccountEntity().apply {
-              id = account.id
-              type = account.type
-              org = account.org
-              balance = account.balance
-              user = UserEntity().apply { id = account.user }
-            })
-        .id
+  override fun save(account: Account): UUID {
+    return accountRepository.save(mapToEntity(account)).id
   }
 
   override fun list(user: User): List<Account> {
     return accountRepository.findByUser(UserEntity().apply { id = user.id!! }).map {
-      Account(id = it.id, type = it.type, org = it.org, balance = it.balance, user.id!!)
+      mapToDomain(it)
     }
   }
 
-  override fun findByIdAndUser(id: String, user: User): Account? {
+  override fun findByIdAndUser(id: UUID, user: User): Account? {
     val accountEntity =
         accountRepository.findByIdAndUser(id, UserEntity().also { it.id = user.id!! })
 
-    return accountEntity?.let {
-      Account(
-          id = accountEntity.id,
-          type = accountEntity.type,
-          org = accountEntity.org,
-          balance = accountEntity.balance,
-          user = accountEntity.user.id!!)
-    }
+    return accountEntity?.let { mapToDomain(it) }
   }
 
   override fun findByUser(user: User): List<Account> {
     TODO("Not yet implemented")
+  }
+
+  private fun mapToDomain(entity: AccountEntity): Account {
+    return Account(
+        id = entity.id,
+        type = entity.type,
+        org = entity.org,
+        balance = entity.balance,
+        name = entity.name,
+        userId = entity.user.id)
+  }
+
+  private fun mapToEntity(domain: Account): AccountEntity {
+    return AccountEntity().apply {
+      name = domain.name
+      type = domain.type
+      org = domain.org
+      balance = domain.balance
+      user = UserEntity().apply { id = domain.userId }
+    }
   }
 }

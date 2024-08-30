@@ -6,7 +6,7 @@ import java.util.*
 interface GoalPersistence {
   fun save(goal: Goal): Goal
 
-  fun findByIdAndUserId(id: UUID, userId: Long): Goal?
+  fun findByIdAndUserId(id: UUID, userId: UUID): Goal?
 
-  fun findAllByUserId(userId: Long): List<Goal>
+  fun findAllByUserId(userId: UUID): List<Goal>
 }

@@ -5,6 +5,7 @@ import com.financetracker.domain.model.Goal
 import com.financetracker.domain.model.GoalProgressUpdate
 import com.financetracker.infrastructure.adapters.outbound.persistence.entity.GoalEntity
 import com.financetracker.infrastructure.adapters.outbound.persistence.entity.GoalProgressUpdateEntity
+import com.financetracker.infrastructure.adapters.outbound.persistence.entity.UserEntity
 import com.financetracker.infrastructure.adapters.outbound.persistence.repository.GoalRepository
 import org.springframework.stereotype.Service
 import java.util.*
@@ -18,25 +19,26 @@ class GoalAdapter(private val goalRepository: GoalRepository) : GoalPersistence 
     return mapToDomainGoal(savedGoalEntity)
   }
 
-  override fun findByIdAndUserId(id: UUID, userId: Long): Goal? {
+  override fun findByIdAndUserId(id: UUID, userId: UUID): Goal? {
     return goalRepository.findByIdAndUserId(id, userId)?.let { mapToDomainGoal(it) }
   }
 
-  override fun findAllByUserId(userId: Long): List<Goal> {
+  override fun findAllByUserId(userId: UUID): List<Goal> {
     return goalRepository.findAllByUserId(userId).map { mapToDomainGoal(it) }
   }
 
   private fun mapToGoalEntity(goal: Goal): GoalEntity {
-    return GoalEntity(
-        id = goal.id,
-        name = goal.name,
-        description = goal.description,
-        targetDate = goal.targetDate,
-        amountTarget = goal.amountTarget,
-        amountProgress = goal.amountProgress,
-        userId = goal.userId,
-        progressUpdates =
-            goal.progressUpdates.map { mapToGoalProgressUpdateEntity(it) }.toMutableList())
+    return GoalEntity().apply {
+      id = goal.id
+      name = goal.name
+      description = goal.description
+      targetDate = goal.targetDate
+      amountTarget = goal.amountTarget
+      amountProgress = goal.amountProgress
+      user = UserEntity().apply { goal.userId }
+      progressUpdates =
+          goal.progressUpdates.map { mapToGoalProgressUpdateEntity(it) }.toMutableList()
+    }
   }
 
   private fun mapToGoalProgressUpdateEntity(update: GoalProgressUpdate): GoalProgressUpdateEntity {
@@ -52,7 +54,7 @@ class GoalAdapter(private val goalRepository: GoalRepository) : GoalPersistence 
         targetDate = goalEntity.targetDate,
         amountTarget = goalEntity.amountTarget,
         amountProgress = goalEntity.amountProgress,
-        userId = goalEntity.userId,
+        userId = goalEntity.user.id,
         toSavePerPayPeriod = 0.0,
         progressUpdates =
             goalEntity.progressUpdates.map { mapToDomainGoalProgressUpdate(it) }.toMutableList())

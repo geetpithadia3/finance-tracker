@@ -34,18 +34,6 @@ class AccountController(
         accountManagementUseCase.list(User(username = user.username, password = user.password)))
   }
 
-  //  @DeleteMapping("/account")
-  //  fun deleteAccount(@PathVariable account: String): ResponseEntity<Unit> {
-  //    val user = getCurrentUser()
-  //    return ResponseEntity.ok(accountApplicationService.deleteAccount(account, user))
-  //  }
-
-  //  @PostMapping("/transactions")
-  //  fun addTransactions(@RequestBody request: List<AddTransactionRequest>): ResponseEntity<Unit> {
-  //    val user = getCurrentUser()
-  //    accountApplicationService.addTransactions(request, user)
-  //    return ResponseEntity.ok().build()
-  //  }
   private fun getCurrentUser(): UserEntity {
     val authentication = SecurityContextHolder.getContext().authentication
     val username = authentication.name

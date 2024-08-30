@@ -5,12 +5,13 @@ import com.financetracker.domain.model.TransactionType
 import jakarta.persistence.*
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.util.*
 
 @Entity
 @Table(name = "transactions")
 class TransactionEntity {
 
-  @GeneratedValue(strategy = GenerationType.IDENTITY) @Id var id: Long = 0
+  @GeneratedValue(strategy = GenerationType.UUID) @Id lateinit var id: UUID
 
   @Enumerated(EnumType.STRING) lateinit var type: TransactionType
 

@@ -11,11 +11,12 @@ import com.financetracker.infrastructure.adapters.outbound.persistence.repositor
 import org.springframework.stereotype.Service
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.util.*
 
 @Service
 class TransactionAdapter(val transactionRepository: TransactionRepository) :
     TransactionPersistence {
-  override fun save(transaction: Transaction): Long {
+  override fun save(transaction: Transaction): UUID {
     return transactionRepository
         .save(
             TransactionEntity().apply {
@@ -25,7 +26,7 @@ class TransactionAdapter(val transactionRepository: TransactionRepository) :
               amount = transaction.amount
               occurredOn = transaction.occurredOn
               lastSyncedOn = transaction.lastSyncedAt
-              account = AccountEntity().apply { id = transaction.account }
+              account = AccountEntity().apply { id = transaction.accountId }
             })
         .id
   }
@@ -38,7 +39,7 @@ class TransactionAdapter(val transactionRepository: TransactionRepository) :
   ): List<Transaction> {
     return transactionRepository
         .findByAccountInAndTypeAndOccurredOnBetween(
-            accounts = accounts.map { AccountEntity().apply { id = it.id } },
+            accounts = accounts.map { AccountEntity().apply { id = it.id!! } },
             type = type,
             startDate = startDate,
             endDate = endDate)
@@ -49,13 +50,13 @@ class TransactionAdapter(val transactionRepository: TransactionRepository) :
               description = it.description,
               occurredOn = it.occurredOn,
               amount = it.amount,
-              account = it.account.id,
+              accountId = it.account.id,
               category = Category.valueOf(it.category.name),
               lastSyncedAt = it.lastSyncedOn)
         }
   }
 
-  override fun getLastSyncTimeForAccount(account: String): LocalDateTime {
+  override fun getLastSyncTimeForAccount(account: UUID): LocalDateTime {
     TODO("Not yet implemented")
   }
 
@@ -67,7 +68,7 @@ class TransactionAdapter(val transactionRepository: TransactionRepository) :
           description = it.description,
           occurredOn = it.occurredOn,
           amount = it.amount,
-          account = it.account.id,
+          accountId = it.account.id,
           category = Category.valueOf(it.category.name),
           lastSyncedAt = it.lastSyncedOn)
     }!!

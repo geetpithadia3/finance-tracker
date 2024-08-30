@@ -8,13 +8,14 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import java.util.*
 
 @RestController
 @RequestMapping("/auth")
 class AuthController(private val userManagementUseCase: UserManagementUseCase) {
 
   @PostMapping("/register")
-  fun register(@RequestBody request: RegisterRequest): ResponseEntity<Long> {
+  fun register(@RequestBody request: RegisterRequest): ResponseEntity<UUID> {
     return ResponseEntity.ok(userManagementUseCase.register(request))
   }
 

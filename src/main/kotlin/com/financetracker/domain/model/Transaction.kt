@@ -2,9 +2,10 @@ package com.financetracker.domain.model
 
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.util.*
 
 data class Transaction(
-    val id: Long,
+    val id: UUID? = null,
     val type: TransactionType,
     val category: Category,
     val description: String,
@@ -12,5 +13,5 @@ data class Transaction(
     var externalId: String? = null,
     val occurredOn: LocalDate,
     var lastSyncedAt: LocalDateTime,
-    val account: String
+    val accountId: UUID
 )

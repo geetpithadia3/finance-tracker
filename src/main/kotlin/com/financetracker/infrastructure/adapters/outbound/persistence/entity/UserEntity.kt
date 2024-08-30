@@ -2,11 +2,12 @@ package com.financetracker.infrastructure.adapters.outbound.persistence.entity
 
 import com.financetracker.infrastructure.adapters.outbound.persistence.entity.goal.PayScheduleEntity
 import jakarta.persistence.*
+import java.util.*
 
 @Entity
 @Table(name = "users")
 class UserEntity {
-  @Id @GeneratedValue(strategy = GenerationType.IDENTITY) var id: Long = 0
+  @Id @GeneratedValue(strategy = GenerationType.UUID) lateinit var id: UUID
 
   @Column(unique = true) lateinit var username: String
 

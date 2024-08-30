@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import java.util.*
 
 @RestController
 @RequestMapping("/paySchedule")
@@ -19,7 +20,7 @@ class PaySchedulerController(
 ) {
 
   @PostMapping
-  fun create(@RequestBody request: AddPayScheduleRequest): ResponseEntity<Long> {
+  fun create(@RequestBody request: AddPayScheduleRequest): ResponseEntity<UUID> {
     val user = getCurrentUser()
     return ResponseEntity.ok(payScheduleManagementUseCase.addPaySchedule(request, user))
   }

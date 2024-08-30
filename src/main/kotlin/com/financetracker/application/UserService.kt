@@ -10,6 +10,7 @@ import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
+import java.util.*
 
 @Service
 class UserService(
@@ -18,7 +19,7 @@ class UserService(
     private val authenticationManager: AuthenticationManager,
     private val jwtTokenUtil: JwtTokenUtil
 ) : UserManagementUseCase {
-  override fun register(request: RegisterRequest): Long {
+  override fun register(request: RegisterRequest): UUID {
     val user =
         User(username = request.username, password = passwordEncoder.encode(request.password))
     return userPersistence.save(user)

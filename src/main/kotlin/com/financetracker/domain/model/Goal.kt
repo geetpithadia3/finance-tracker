@@ -10,7 +10,7 @@ data class Goal(
     val targetDate: LocalDate,
     val amountTarget: Double,
     var amountProgress: Double = 0.0,
-    val userId: Long,
+    val userId: UUID,
     val progressUpdates: MutableList<GoalProgressUpdate> = mutableListOf(),
     val toSavePerPayPeriod: Double
 )

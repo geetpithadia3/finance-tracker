@@ -1,3 +1,5 @@
 package com.financetracker.infrastructure.adapters.inbound.dto.response
 
-data class AccountBalanceResponse(val accountId: String, var balance: Double)
+import java.util.*
+
+data class AccountBalanceResponse(val accountId: UUID, val name: String, var balance: Double)

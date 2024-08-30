@@ -24,13 +24,13 @@ class ExpenseService(
 
     return expenses.map {
       ExpenseResponse(
-          id = it.id,
+          id = it.id!!,
           type = it.type,
           category = it.category,
           description = it.description,
           amount = it.amount,
           occurredOn = it.occurredOn,
-          account = it.account)
+          account = it.accountId)
     }
   }
 }

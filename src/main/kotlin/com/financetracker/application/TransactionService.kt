@@ -9,7 +9,6 @@ import com.financetracker.infrastructure.adapters.inbound.dto.request.AddTransac
 import com.financetracker.infrastructure.adapters.inbound.dto.request.SyncAccountRequest
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
-import java.util.*
 
 @Service
 class TransactionService(
@@ -27,14 +26,13 @@ class TransactionService(
       account.let { acc ->
         val transaction =
             Transaction(
-                id = Random().nextLong(),
                 type = TransactionType.valueOf(it.type.uppercase()),
                 category = Category.valueOf(it.category.uppercase()),
                 description = it.description,
                 amount = it.amount,
                 occurredOn = it.occurredOn,
                 lastSyncedAt = LocalDateTime.now(),
-                account = acc.id)
+                accountId = acc.id!!)
         transactionPersistence.save(transaction)
         it
       }
@@ -59,13 +57,12 @@ class TransactionService(
       if (existingTransaction == null) {
         val newTransaction =
             Transaction(
-                id = Random().nextLong(),
                 type = TransactionType.valueOf(transaction.type.uppercase()),
                 amount = transaction.amount,
                 description = transaction.description,
                 occurredOn = transaction.occurredOn,
                 externalId = transaction.id,
-                account = request.accountId,
+                accountId = request.accountId,
                 category = Category.valueOf(transaction.category.uppercase()),
                 lastSyncedAt = LocalDateTime.now())
 
