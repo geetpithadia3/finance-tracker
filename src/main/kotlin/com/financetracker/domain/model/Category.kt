@@ -1,4 +1,4 @@
-package com.financetracker.domain.account.model
+package com.financetracker.domain.model
 
 enum class Category {
   HOUSING,

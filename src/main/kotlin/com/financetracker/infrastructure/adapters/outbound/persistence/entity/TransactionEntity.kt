@@ -1,7 +1,7 @@
 package com.financetracker.infrastructure.adapters.outbound.persistence.entity
 
-import com.financetracker.domain.account.model.Category
-import com.financetracker.domain.account.model.TransactionType
+import com.financetracker.domain.model.Category
+import com.financetracker.domain.model.TransactionType
 import jakarta.persistence.*
 import java.time.LocalDate
 import java.time.LocalDateTime

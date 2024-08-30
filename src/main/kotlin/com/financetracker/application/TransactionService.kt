@@ -4,16 +4,12 @@ import com.financetracker.application.ports.input.TransactionManagementUseCase
 import com.financetracker.application.ports.output.AccountPersistence
 import com.financetracker.application.ports.output.SharingService
 import com.financetracker.application.ports.output.TransactionPersistence
-import com.financetracker.domain.account.model.Category
-import com.financetracker.domain.account.model.TransactionType
-import com.financetracker.domain.model.SharingTransaction
-import com.financetracker.domain.model.Transaction
-import com.financetracker.domain.model.User
+import com.financetracker.domain.model.*
 import com.financetracker.infrastructure.adapters.inbound.dto.request.AddTransactionRequest
 import com.financetracker.infrastructure.adapters.inbound.dto.request.SyncAccountRequest
+import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.util.*
-import org.springframework.stereotype.Service
 
 @Service
 class TransactionService(

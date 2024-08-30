@@ -1,7 +1,5 @@
 package com.financetracker.domain.model
 
-import com.financetracker.domain.account.model.Category
-import com.financetracker.domain.account.model.TransactionType
 import java.time.LocalDate
 import java.time.LocalDateTime
 

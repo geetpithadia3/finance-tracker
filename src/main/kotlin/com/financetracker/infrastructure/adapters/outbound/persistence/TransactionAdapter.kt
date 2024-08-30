@@ -1,16 +1,16 @@
 package com.financetracker.infrastructure.adapters.outbound.persistence
 
 import com.financetracker.application.ports.output.TransactionPersistence
-import com.financetracker.domain.account.model.Category
-import com.financetracker.domain.account.model.TransactionType
 import com.financetracker.domain.model.Account
+import com.financetracker.domain.model.Category
 import com.financetracker.domain.model.Transaction
+import com.financetracker.domain.model.TransactionType
 import com.financetracker.infrastructure.adapters.outbound.persistence.entity.AccountEntity
 import com.financetracker.infrastructure.adapters.outbound.persistence.entity.TransactionEntity
 import com.financetracker.infrastructure.adapters.outbound.persistence.repository.TransactionRepository
+import org.springframework.stereotype.Service
 import java.time.LocalDate
 import java.time.LocalDateTime
-import org.springframework.stereotype.Service
 
 @Service
 class TransactionAdapter(val transactionRepository: TransactionRepository) :
