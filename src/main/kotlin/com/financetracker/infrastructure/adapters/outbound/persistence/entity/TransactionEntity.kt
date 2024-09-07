@@ -8,7 +8,7 @@ import java.time.LocalDateTime
 import java.util.*
 
 @Entity
-@Table(name = "transactions")
+@Table(name = "transaction_entity")
 class TransactionEntity {
 
   @GeneratedValue(strategy = GenerationType.UUID) @Id lateinit var id: UUID

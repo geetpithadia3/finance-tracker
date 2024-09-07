@@ -6,6 +6,6 @@ data class User(
     val id: UUID? = null,
     val username: String,
     val password: String,
-    val externalId: String? = null,
-    val externalKey: String? = null
+    var externalId: String? = null,
+    var externalKey: String? = null
 )

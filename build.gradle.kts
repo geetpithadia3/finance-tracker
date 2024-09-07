@@ -41,6 +41,7 @@ dependencies {
   testImplementation("org.springframework.integration:spring-integration-test")
   implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.22")
   implementation("com.squareup.okhttp3:okhttp:4.10.0")
+  implementation("ch.qos.logback:logback-classic:1.4.11")
 
   // Persistence
   implementation("org.springframework.boot:spring-boot-starter-actuator:3.2.2")

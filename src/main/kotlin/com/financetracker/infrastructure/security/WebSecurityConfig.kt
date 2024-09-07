@@ -16,31 +16,35 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 class WebSecurityConfig(private val jwtRequestFilter: JwtRequestFilter) {
 
-    @Bean
-    fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
-        http
-            .csrf { it.disable() }
-            .cors { it.disable() }
-            .authorizeHttpRequests { auth ->
-                auth
-                    .requestMatchers("/auth/**").permitAll()
-                    .anyRequest().authenticated()
-            }
-            .sessionManagement { session ->
-                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            }
-            .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter::class.java)
+  @Bean
+  fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
+    http
+        .csrf { it.disable() }
+        .cors { it.disable() }
+        .authorizeHttpRequests { auth ->
+          auth
+              .requestMatchers("/auth/register", "/auth/login")
+              .permitAll()
+              .anyRequest()
+              .authenticated()
+        }
+        .sessionManagement { session ->
+          session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+        }
+        .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter::class.java)
 
-        return http.build()
-    }
+    return http.build()
+  }
 
-    @Bean
-    fun authenticationManager(authenticationConfiguration: AuthenticationConfiguration): AuthenticationManager {
-        return authenticationConfiguration.authenticationManager
-    }
+  @Bean
+  fun authenticationManager(
+      authenticationConfiguration: AuthenticationConfiguration
+  ): AuthenticationManager {
+    return authenticationConfiguration.authenticationManager
+  }
 
-    @Bean
-    fun passwordEncoder(): PasswordEncoder {
-        return BCryptPasswordEncoder()
-    }
+  @Bean
+  fun passwordEncoder(): PasswordEncoder {
+    return BCryptPasswordEncoder()
+  }
 }

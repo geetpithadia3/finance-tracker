@@ -18,4 +18,18 @@ class UserAdapter(val userRepository: UserRepository) : UserPersistence {
             })
         .id
   }
+
+  override fun findById(id: UUID): User? {
+    return userRepository
+        .findById(id)
+        .map { entity ->
+          User(
+              id = entity.id,
+              username = entity.username,
+              password = entity.password,
+              externalId = entity.externalId,
+              externalKey = entity.externalKey)
+        }
+        .orElse(null)
+  }
 }

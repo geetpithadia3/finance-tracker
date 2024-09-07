@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository
 import java.util.*
 
 @Repository
-interface AccountRepository : JpaRepository<AccountEntity, String> {
+interface AccountRepository : JpaRepository<AccountEntity, UUID> {
   fun findByUser(user: UserEntity): List<AccountEntity>
 
   fun findByIdAndUser(id: UUID, user: UserEntity): AccountEntity?

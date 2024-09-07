@@ -1,9 +1,8 @@
 package com.financetracker.infrastructure.adapters.inbound
 
-import com.financetracker.application.ports.input.ExpenseManagementUseCase
+import com.financetracker.application.ports.input.UserManagementUseCase
 import com.financetracker.domain.model.User
-import com.financetracker.infrastructure.adapters.inbound.dto.request.ListExpensesByMonthRequest
-import com.financetracker.infrastructure.adapters.inbound.dto.response.ExpenseResponse
+import com.financetracker.infrastructure.adapters.inbound.dto.request.AddExternalCredentialsRequest
 import com.financetracker.infrastructure.adapters.outbound.persistence.repository.UserRepository
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
@@ -13,27 +12,27 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-class ExpenseController(
-    private val expenseManagementUseCase: ExpenseManagementUseCase,
+class UserController(
+    private val userManagementUseCase: UserManagementUseCase,
     private val userRepository: UserRepository
 ) {
-  private val logger = LoggerFactory.getLogger(ExpenseController::class.java)
 
-  @PostMapping("/expenses")
-  fun listExpensesByMonth(
-      @RequestBody request: ListExpensesByMonthRequest
-  ): ResponseEntity<List<ExpenseResponse>> {
-    val user = getCurrentUser()
+  private val logger = LoggerFactory.getLogger(TransactionController::class.java)
+
+  @PostMapping("/external-credentials")
+  fun addExternalCredentials(
+      @RequestBody request: AddExternalCredentialsRequest
+  ): ResponseEntity<Unit> {
     logger.info(
-        "Received request to list expenses for user: ${user.username}, month: ${request.yearMonth}")
+        "Received request to add external credentials for user: ${getCurrentUser().username}")
     return try {
-      val response = expenseManagementUseCase.list(request, user)
-      logger.info(
-          "Successfully fetched ${response.size} expenses for user: ${user.username}, month: ${request.yearMonth}")
-      ResponseEntity.ok(response)
+      val user = getCurrentUser()
+      userManagementUseCase.addExternalCredentials(
+          user.id!!, request.externalId, request.externalKey)
+      logger.info("External credentials added successfully for user: ${user.username}")
+      ResponseEntity.ok().build()
     } catch (e: Exception) {
-      logger.error(
-          "Error fetching expenses for user: ${user.username}, month: ${request.yearMonth}", e)
+      logger.error("Error adding external credentials for user: ${getCurrentUser().username}", e)
       throw e
     }
   }

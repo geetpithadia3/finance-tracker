@@ -11,19 +11,24 @@ import okhttp3.Request
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
+import org.slf4j.LoggerFactory
 
 @Service
 class SplitwiseSharingService(@Value("\${app.splitwise.api.url}") var splitwiseApiUrl: String) :
     SharingService {
+  private val logger = LoggerFactory.getLogger(SplitwiseSharingService::class.java)
+
   override fun getTransactionsForUser(
       userId: String,
       userKey: String,
       lastSyncTime: LocalDateTime
   ): List<SharingTransaction> {
 
+    logger.info("Fetching Splitwise transactions for user: $userId, since: $lastSyncTime")
+    
     val transactions = getExpensesDatedAfter(lastSyncTime, userKey)
 
-    return transactions.expenses.flatMap { expense ->
+    val filteredTransactions = transactions.expenses.flatMap { expense ->
       expense.users
           .filter { it.userId == userId.toLong() }
           .map {
@@ -37,12 +42,16 @@ class SplitwiseSharingService(@Value("\${app.splitwise.api.url}") var splitwiseA
                 updatedAt = expense.updatedAt)
           }
     }
+
+    logger.info("Fetched ${filteredTransactions.size} Splitwise transactions for user: $userId")
+    return filteredTransactions
   }
 
   private fun getExpensesDatedAfter(
       datedAfter: LocalDateTime,
       userKey: String
   ): SplitwiseExpenseList {
+    logger.info("Calling Splitwise API to get expenses dated after: $datedAfter")
     val client = OkHttpClient()
     val request =
         Request.Builder()
@@ -53,6 +62,8 @@ class SplitwiseSharingService(@Value("\${app.splitwise.api.url}") var splitwiseA
     val mapper =
         jacksonObjectMapper().setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
     mapper.registerModules(JavaTimeModule())
-    return mapper.readValue(expensesJson, SplitwiseExpenseList::class.java)
+    val expenseList = mapper.readValue(expensesJson, SplitwiseExpenseList::class.java)
+    logger.info("Received ${expenseList.expenses.size} expenses from Splitwise API")
+    return expenseList
   }
 }

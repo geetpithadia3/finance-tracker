@@ -1,6 +1,7 @@
 package com.financetracker.infrastructure.security
 
 import com.financetracker.infrastructure.adapters.outbound.persistence.repository.UserRepository
+import org.springframework.security.core.userdetails.User
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.core.userdetails.UsernameNotFoundException
@@ -14,6 +15,6 @@ class CustomUserDetailsService(private val userRepository: UserRepository) : Use
         userRepository.findByUsername(username)
             ?: throw UsernameNotFoundException("User not found with username: $username")
 
-    return user as UserDetails // Assuming your User entity implements UserDetails
+    return User(user.username, user.password, emptyList())
   }
 }

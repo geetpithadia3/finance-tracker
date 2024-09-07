@@ -7,6 +7,7 @@ import com.financetracker.application.ports.output.TransactionPersistence
 import com.financetracker.domain.model.*
 import com.financetracker.infrastructure.adapters.inbound.dto.request.AddTransactionRequest
 import com.financetracker.infrastructure.adapters.inbound.dto.request.SyncAccountRequest
+import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
@@ -17,25 +18,32 @@ class TransactionService(
     val sharingService: SharingService
 ) : TransactionManagementUseCase {
 
+  @Transactional
   override fun add(requests: List<AddTransactionRequest>, user: User) {
-    requests.map {
-      val account =
-          accountPersistence.findByIdAndUser(it.accountId, user)
-              ?: throw RuntimeException("Account not found for user")
-
-      account.let { acc ->
-        val transaction =
-            Transaction(
-                type = TransactionType.valueOf(it.type.uppercase()),
-                category = Category.valueOf(it.category.uppercase()),
-                description = it.description,
-                amount = it.amount,
-                occurredOn = it.occurredOn,
-                lastSyncedAt = LocalDateTime.now(),
-                accountId = acc.id!!)
-        transactionPersistence.save(transaction)
-        it
+    requests.forEach { transactionRequest ->
+      val account = accountPersistence.findByIdAndUser(transactionRequest.accountId, user)
+          ?: throw RuntimeException("Account not found for user")
+  
+      val transaction = Transaction(
+          type = TransactionType.valueOf(transactionRequest.type.uppercase()),
+          category = Category.valueOf(transactionRequest.category.uppercase()),
+          description = transactionRequest.description,
+          amount = transactionRequest.amount,
+          occurredOn = transactionRequest.occurredOn,
+          lastSyncedAt = LocalDateTime.now(),
+          accountId = account.id!!)
+  
+      transactionPersistence.save(transaction)
+  
+      // Update account balance
+      when (transaction.type) {
+        TransactionType.INCOME -> account.balance += transaction.amount
+        TransactionType.EXPENSE -> account.balance -= transaction.amount
+        TransactionType.TRANSFER_DEBIT -> account.balance -= transaction.amount
+        TransactionType.TRANSFER_CREDIT -> account.balance += transaction.amount
       }
+  
+      accountPersistence.save(account)
     }
   }
 

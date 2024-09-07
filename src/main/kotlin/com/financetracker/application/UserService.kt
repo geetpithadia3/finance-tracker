@@ -30,4 +30,11 @@ class UserService(
         UsernamePasswordAuthenticationToken(request.username, request.password))
     return jwtTokenUtil.generateToken(request.username)
   }
+
+  override fun addExternalCredentials(userId: UUID, externalId: String, externalKey: String) {
+    val user = userPersistence.findById(userId) ?: throw RuntimeException("User not found")
+    user.externalId = externalId
+    user.externalKey = externalKey
+    userPersistence.save(user)
+}
 }

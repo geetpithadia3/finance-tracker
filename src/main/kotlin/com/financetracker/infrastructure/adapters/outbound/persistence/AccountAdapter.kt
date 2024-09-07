@@ -12,7 +12,10 @@ import java.util.*
 @Service
 class AccountAdapter(val accountRepository: AccountRepository) : AccountPersistence {
   override fun save(account: Account): UUID {
-    return accountRepository.save(mapToEntity(account)).id
+    val entity = accountRepository.findById(account.id!!)
+        .orElse(mapToEntity(account))
+    entity.balance = account.balance
+    return accountRepository.save(entity).id
   }
 
   override fun list(user: User): List<Account> {
@@ -29,7 +32,9 @@ class AccountAdapter(val accountRepository: AccountRepository) : AccountPersiste
   }
 
   override fun findByUser(user: User): List<Account> {
-    TODO("Not yet implemented")
+    val accountEntities = accountRepository.findByUser(UserEntity().also { it.id = user.id!! })
+
+    return accountEntities.map { mapToDomain(it) }
   }
 
   private fun mapToDomain(entity: AccountEntity): Account {
@@ -43,12 +48,17 @@ class AccountAdapter(val accountRepository: AccountRepository) : AccountPersiste
   }
 
   private fun mapToEntity(domain: Account): AccountEntity {
-    return AccountEntity().apply {
-      name = domain.name
-      type = domain.type
-      org = domain.org
-      balance = domain.balance
-      user = UserEntity().apply { id = domain.userId }
+    val accountEntity =
+        AccountEntity().apply {
+          name = domain.name
+          type = domain.type
+          org = domain.org
+          balance = domain.balance
+          user = UserEntity().apply { id = domain.userId }
+        }
+    if (domain.id != null) {
+      accountEntity.apply { id = domain.id!! }
     }
+    return accountEntity
   }
 }

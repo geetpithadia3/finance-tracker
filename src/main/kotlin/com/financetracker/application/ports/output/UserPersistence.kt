@@ -5,4 +5,6 @@ import java.util.*
 
 interface UserPersistence {
   fun save(user: User): UUID
+
+  fun findById(id: UUID): User?
 }

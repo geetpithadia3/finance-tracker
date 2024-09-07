@@ -5,7 +5,7 @@ import jakarta.persistence.*
 import java.util.*
 
 @Entity
-@Table(name = "users")
+@Table(name = "user_entity")
 class UserEntity {
   @Id @GeneratedValue(strategy = GenerationType.UUID) lateinit var id: UUID
 
