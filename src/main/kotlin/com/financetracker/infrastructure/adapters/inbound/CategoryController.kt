@@ -1,7 +1,6 @@
 package com.financetracker.infrastructure.adapters.inbound
 
 import com.financetracker.application.ports.input.CategoryManagementUseCase
-import com.financetracker.infrastructure.adapters.inbound.dto.response.CategoryResponse
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RestController
@@ -12,7 +11,7 @@ class CategoryController(
 ) {
 
   @GetMapping("/categories")
-  fun listCategories(): ResponseEntity<List<CategoryResponse>> {
+  fun listCategories(): ResponseEntity<List<String>> {
     return ResponseEntity.ok(categoryManagementUseCase.list())
   }
 }

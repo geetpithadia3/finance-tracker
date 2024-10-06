@@ -6,12 +6,13 @@ import java.util.*
 
 data class Transaction(
     val id: UUID? = null,
-    val type: TransactionType,
+    val type: TransactionType? = null,
     val category: Category,
     val description: String,
     var amount: Double = 0.0,
     var externalId: String? = null,
     val occurredOn: LocalDate,
     var lastSyncedAt: LocalDateTime,
-    val accountId: UUID
+    val accountId: UUID,
+    var isDeleted: Boolean = false
 )

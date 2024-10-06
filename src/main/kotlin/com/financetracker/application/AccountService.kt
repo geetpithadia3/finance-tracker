@@ -21,12 +21,14 @@ class AccountService(val accountPersistence: AccountPersistence) : AccountManage
 
     val id = accountPersistence.save(account)
 
-    return AccountBalanceResponse(id, request.name, request.initialBalance)
+    return AccountBalanceResponse(
+        id, request.name, request.org, request.type, request.initialBalance)
   }
 
   override fun list(user: User): List<AccountBalanceResponse> {
     return accountPersistence.list(user).map {
-      AccountBalanceResponse(accountId = it.id!!, name = it.name, balance = it.balance)
+      AccountBalanceResponse(
+          accountId = it.id!!, name = it.name, org = it.org, type = it.type, balance = it.balance)
     }
   }
 }

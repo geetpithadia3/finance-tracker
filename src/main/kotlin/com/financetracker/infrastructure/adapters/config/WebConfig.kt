@@ -9,7 +9,7 @@ class WebConfig : WebMvcConfigurer {
   override fun addCorsMappings(registry: CorsRegistry) {
     registry
         .addMapping("/**")
-        .allowedOrigins("*") // Change this to the specific origins you want to allow
+        .allowedOrigins("*")
         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
         .allowedHeaders("*")
   }

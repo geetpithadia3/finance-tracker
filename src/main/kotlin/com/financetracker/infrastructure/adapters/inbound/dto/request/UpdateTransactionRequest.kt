@@ -3,11 +3,11 @@ package com.financetracker.infrastructure.adapters.inbound.dto.request
 import java.time.LocalDate
 import java.util.*
 
-data class AddTransactionRequest(
-    val accountId: UUID,
-    val amount: Double,
+data class UpdateTransactionRequest(
+    val id: UUID,
     val description: String,
     val category: String,
     val occurredOn: LocalDate,
-    val type: String
+    val deleted: Boolean,
+    val account: UUID
 )

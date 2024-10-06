@@ -11,6 +11,7 @@ import com.financetracker.infrastructure.adapters.outbound.persistence.repositor
 import org.springframework.stereotype.Service
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.YearMonth
 import java.util.*
 
 @Service
@@ -20,7 +21,7 @@ class TransactionAdapter(val transactionRepository: TransactionRepository) :
     return transactionRepository
         .save(
             TransactionEntity().apply {
-              type = transaction.type
+              type = transaction.type!!
               category = transaction.category
               description = transaction.description
               amount = transaction.amount
@@ -31,9 +32,32 @@ class TransactionAdapter(val transactionRepository: TransactionRepository) :
         .id
   }
 
-  override fun findByAccountInAndTypeAndOccurredOnBetween(
+  override fun update(transaction: Transaction): UUID {
+    val existingEntity =
+        transactionRepository.findById(transaction.id!!).orElseThrow {
+          NoSuchElementException("Transaction not found with id: ${transaction.id}")
+        }
+
+    // Update only the fields that are provided in the input transaction
+    existingEntity.apply {
+      category = transaction.category ?: category
+      description = transaction.description ?: description
+      occurredOn = transaction.occurredOn ?: occurredOn
+      lastSyncedOn = transaction.lastSyncedAt ?: lastSyncedOn
+      isDeleted = transaction.isDeleted
+      // Only update the account if a new accountId is provided
+      transaction.accountId?.let { newAccountId ->
+        account = AccountEntity().apply { id = newAccountId }
+      }
+    }
+
+    return transactionRepository.save(existingEntity).id
+  }
+
+  override fun findByAccountInAndTypeAndIsDeletedAndOccurredOnBetween(
       accounts: List<Account>,
       type: TransactionType,
+      isDeleted: Boolean,
       startDate: LocalDate,
       endDate: LocalDate
   ): List<Transaction> {
@@ -43,6 +67,7 @@ class TransactionAdapter(val transactionRepository: TransactionRepository) :
             type = type,
             startDate = startDate,
             endDate = endDate)
+        .filter { it.isDeleted == isDeleted }
         .map {
           Transaction(
               id = it.id,
@@ -54,6 +79,16 @@ class TransactionAdapter(val transactionRepository: TransactionRepository) :
               category = Category.valueOf(it.category.name),
               lastSyncedAt = it.lastSyncedOn)
         }
+  }
+
+  override fun getSavingsBetween(yearMonth: YearMonth, accounts: List<UUID>): Double {
+    return transactionRepository.getTotalAmountByCategoryAndMonth(
+        Category.SAVINGS.name, yearMonth.month.value, yearMonth.year, accounts)
+  }
+
+  override fun getIncomeBetween(yearMonth: YearMonth, accounts: List<UUID>): Double {
+    return transactionRepository.getTotalAmountByTypeForMonth(
+        TransactionType.CREDIT.name, yearMonth.month.value, yearMonth.year, accounts)
   }
 
   override fun getLastSyncTimeForAccount(account: UUID): LocalDateTime {

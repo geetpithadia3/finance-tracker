@@ -7,6 +7,7 @@ import com.financetracker.application.ports.output.TransactionPersistence
 import com.financetracker.domain.model.*
 import com.financetracker.infrastructure.adapters.inbound.dto.request.AddTransactionRequest
 import com.financetracker.infrastructure.adapters.inbound.dto.request.SyncAccountRequest
+import com.financetracker.infrastructure.adapters.inbound.dto.request.UpdateTransactionRequest
 import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -21,29 +22,49 @@ class TransactionService(
   @Transactional
   override fun add(requests: List<AddTransactionRequest>, user: User) {
     requests.forEach { transactionRequest ->
-      val account = accountPersistence.findByIdAndUser(transactionRequest.accountId, user)
-          ?: throw RuntimeException("Account not found for user")
-  
-      val transaction = Transaction(
-          type = TransactionType.valueOf(transactionRequest.type.uppercase()),
-          category = Category.valueOf(transactionRequest.category.uppercase()),
-          description = transactionRequest.description,
-          amount = transactionRequest.amount,
-          occurredOn = transactionRequest.occurredOn,
-          lastSyncedAt = LocalDateTime.now(),
-          accountId = account.id!!)
-  
+      val account =
+          accountPersistence.findByIdAndUser(transactionRequest.accountId, user)
+              ?: throw RuntimeException("Account not found for user")
+
+      val transaction =
+          Transaction(
+              type = TransactionType.fromString(transactionRequest.type.uppercase()),
+              category = Category.valueOf(transactionRequest.category.uppercase()),
+              description = transactionRequest.description,
+              amount = transactionRequest.amount,
+              occurredOn = transactionRequest.occurredOn,
+              lastSyncedAt = LocalDateTime.now(),
+              accountId = account.id!!)
+
       transactionPersistence.save(transaction)
-  
-      // Update account balance
-      when (transaction.type) {
-        TransactionType.INCOME -> account.balance += transaction.amount
-        TransactionType.EXPENSE -> account.balance -= transaction.amount
-        TransactionType.TRANSFER_DEBIT -> account.balance -= transaction.amount
-        TransactionType.TRANSFER_CREDIT -> account.balance += transaction.amount
+
+      when (transaction.type!!) {
+        TransactionType.CREDIT -> account.balance += transaction.amount
+        TransactionType.DEBIT -> account.balance -= transaction.amount
       }
-  
+
       accountPersistence.save(account)
+    }
+  }
+
+  @Transactional
+  override fun update(requests: List<UpdateTransactionRequest>, user: User) {
+    requests.forEach { transactionRequest ->
+      val account =
+          accountPersistence.findByIdAndUser(transactionRequest.account, user)
+              ?: throw RuntimeException("Account not found for user")
+
+      val transaction =
+          Transaction(
+              id = transactionRequest.id,
+              category = Category.valueOf(transactionRequest.category.uppercase()),
+              description = transactionRequest.description,
+              occurredOn = transactionRequest.occurredOn,
+              lastSyncedAt = LocalDateTime.now(),
+              isDeleted = transactionRequest.deleted,
+              accountId = account.id!!)
+
+      transactionPersistence.update(transaction)
     }
   }
 

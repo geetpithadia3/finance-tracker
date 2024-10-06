@@ -3,6 +3,7 @@ package com.financetracker.infrastructure.adapters.inbound
 import com.financetracker.application.ports.input.UserManagementUseCase
 import com.financetracker.infrastructure.adapters.inbound.dto.request.LoginRequest
 import com.financetracker.infrastructure.adapters.inbound.dto.request.RegisterRequest
+import com.financetracker.infrastructure.adapters.inbound.dto.response.AuthResponse
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping
@@ -31,7 +32,7 @@ class AuthController(private val userManagementUseCase: UserManagementUseCase) {
   }
 
   @PostMapping("/login")
-  fun login(@RequestBody request: LoginRequest): ResponseEntity<String> {
+  fun login(@RequestBody request: LoginRequest): ResponseEntity<AuthResponse> {
     logger.info("Received login request for user: ${request.username}")
     return try {
       val token = userManagementUseCase.login(request)

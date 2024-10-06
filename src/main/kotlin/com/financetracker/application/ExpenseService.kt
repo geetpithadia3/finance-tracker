@@ -3,6 +3,7 @@ package com.financetracker.application
 import com.financetracker.application.ports.input.ExpenseManagementUseCase
 import com.financetracker.application.ports.output.AccountPersistence
 import com.financetracker.application.ports.output.TransactionPersistence
+import com.financetracker.domain.model.Category
 import com.financetracker.domain.model.TransactionType
 import com.financetracker.domain.model.User
 import com.financetracker.infrastructure.adapters.inbound.dto.request.ListExpensesByMonthRequest
@@ -19,18 +20,20 @@ class ExpenseService(
     val endDate = request.yearMonth.atEndOfMonth()
     val accounts = accountPersistence.findByUser(user)
     val expenses =
-        transactionPersistence.findByAccountInAndTypeAndOccurredOnBetween(
-            accounts, TransactionType.EXPENSE, startDate, endDate)
+        transactionPersistence.findByAccountInAndTypeAndIsDeletedAndOccurredOnBetween(
+            accounts, TransactionType.DEBIT, false, startDate, endDate)
 
-    return expenses.map {
-      ExpenseResponse(
-          id = it.id!!,
-          type = it.type,
-          category = it.category,
-          description = it.description,
-          amount = it.amount,
-          occurredOn = it.occurredOn,
-          account = it.accountId)
-    }
+    return expenses
+        .filter { (it.category != Category.SAVINGS) && (it.category != Category.TRANSFER) }
+        .map {
+          ExpenseResponse(
+              id = it.id!!,
+              type = it.type!!,
+              category = it.category,
+              description = it.description,
+              amount = it.amount,
+              occurredOn = it.occurredOn,
+              account = it.accountId)
+        }
   }
 }

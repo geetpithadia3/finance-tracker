@@ -12,10 +12,15 @@ import java.util.*
 @Service
 class AccountAdapter(val accountRepository: AccountRepository) : AccountPersistence {
   override fun save(account: Account): UUID {
-    val entity = accountRepository.findById(account.id!!)
-        .orElse(mapToEntity(account))
-    entity.balance = account.balance
-    return accountRepository.save(entity).id
+    val entity: AccountEntity?
+    if (account.id == null) {
+      entity = mapToEntity(account)
+    } else {
+
+      entity = accountRepository.findById(account.id!!).orElse(mapToEntity(account))
+    }
+    entity?.balance = account.balance
+    return accountRepository.save(entity!!).id
   }
 
   override fun list(user: User): List<Account> {

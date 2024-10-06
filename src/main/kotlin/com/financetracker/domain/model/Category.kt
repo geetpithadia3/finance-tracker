@@ -1,6 +1,9 @@
 package com.financetracker.domain.model
 
 enum class Category {
+  SAVINGS,
+  TRANSFER,
+  INCOME,
   HOUSING,
   HOUSEHOLD,
   TRANSIT,
@@ -11,7 +14,6 @@ enum class Category {
   TRAVEL,
   SPORTS,
   GENERAL,
-  TRANSFER,
   CAR,
   GROCERY,
   INVESTMENT

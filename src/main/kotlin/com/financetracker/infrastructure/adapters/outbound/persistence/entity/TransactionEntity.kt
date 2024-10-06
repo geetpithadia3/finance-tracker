@@ -27,5 +27,7 @@ class TransactionEntity {
 
   lateinit var lastSyncedOn: LocalDateTime
 
+  var isDeleted: Boolean = false
+
   @ManyToOne @JoinColumn(name = "account_id", nullable = false) lateinit var account: AccountEntity
 }

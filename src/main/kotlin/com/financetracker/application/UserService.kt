@@ -5,6 +5,7 @@ import com.financetracker.application.ports.output.UserPersistence
 import com.financetracker.domain.model.User
 import com.financetracker.infrastructure.adapters.inbound.dto.request.LoginRequest
 import com.financetracker.infrastructure.adapters.inbound.dto.request.RegisterRequest
+import com.financetracker.infrastructure.adapters.inbound.dto.response.AuthResponse
 import com.financetracker.infrastructure.security.JwtTokenUtil
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
@@ -25,10 +26,10 @@ class UserService(
     return userPersistence.save(user)
   }
 
-  override fun login(request: LoginRequest): String {
+  override fun login(request: LoginRequest): AuthResponse {
     authenticationManager.authenticate(
         UsernamePasswordAuthenticationToken(request.username, request.password))
-    return jwtTokenUtil.generateToken(request.username)
+    return AuthResponse(jwtTokenUtil.generateToken(request.username))
   }
 
   override fun addExternalCredentials(userId: UUID, externalId: String, externalKey: String) {
@@ -36,5 +37,5 @@ class UserService(
     user.externalId = externalId
     user.externalKey = externalKey
     userPersistence.save(user)
-}
+  }
 }
