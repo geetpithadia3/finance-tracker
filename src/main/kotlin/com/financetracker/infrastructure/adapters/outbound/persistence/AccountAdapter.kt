@@ -6,10 +6,12 @@ import com.financetracker.domain.model.User
 import com.financetracker.infrastructure.adapters.outbound.persistence.entity.AccountEntity
 import com.financetracker.infrastructure.adapters.outbound.persistence.entity.UserEntity
 import com.financetracker.infrastructure.adapters.outbound.persistence.repository.AccountRepository
+import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
 import java.util.*
 
 @Service
+@Transactional
 class AccountAdapter(val accountRepository: AccountRepository) : AccountPersistence {
   override fun save(account: Account): UUID {
     val entity: AccountEntity?
@@ -40,6 +42,10 @@ class AccountAdapter(val accountRepository: AccountRepository) : AccountPersiste
     val accountEntities = accountRepository.findByUser(UserEntity().also { it.id = user.id!! })
 
     return accountEntities.map { mapToDomain(it) }
+  }
+
+  override fun delete(accountId: UUID, user: User) {
+    accountRepository.deleteByIdAndUser(accountId, UserEntity().also { it.id = user.id!! })
   }
 
   private fun mapToDomain(entity: AccountEntity): Account {

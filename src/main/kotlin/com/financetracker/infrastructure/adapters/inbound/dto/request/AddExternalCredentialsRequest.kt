@@ -1,3 +1,3 @@
 package com.financetracker.infrastructure.adapters.inbound.dto.request
 
-data class AddExternalCredentialsRequest(val externalId: String, val externalKey: String)
+data class AddExternalCredentialsRequest(val externalKey: String)

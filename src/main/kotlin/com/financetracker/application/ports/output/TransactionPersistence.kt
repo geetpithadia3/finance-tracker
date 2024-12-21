@@ -4,7 +4,6 @@ import com.financetracker.domain.model.Account
 import com.financetracker.domain.model.Transaction
 import com.financetracker.domain.model.TransactionType
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.YearMonth
 import java.util.*
 
@@ -22,11 +21,17 @@ interface TransactionPersistence {
       endDate: LocalDate
   ): List<Transaction>
 
+  fun findByAccountInAndOccurredOnBetween(
+      accounts: List<Account>,
+      startDate: LocalDate,
+      endDate: LocalDate
+  ): List<Transaction>
+
   fun getSavingsBetween(yearMonth: YearMonth, accounts: List<UUID>): Double
 
   fun getIncomeBetween(yearMonth: YearMonth, accounts: List<UUID>): Double
 
-  fun getLastSyncTimeForAccount(account: UUID): LocalDateTime
+  fun getLastSyncTimeForAccount(account: UUID): LocalDate?
 
-  fun findByExternalId(externalId: String): Transaction?
+  fun findByExternalId(externalId: String, accountId: UUID): Transaction?
 }

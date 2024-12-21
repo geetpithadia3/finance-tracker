@@ -27,6 +27,15 @@ class DashboardController(
     return ResponseEntity.ok(dashboardManagementUseCase.getMonthDetails(targetYearMonth, user))
   }
 
+  @GetMapping("/dashboard/expenses-by-category")
+  fun getExpensesByCategory(
+      @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM") yearMonth: YearMonth?
+  ): ResponseEntity<Map<String, Double>> {
+    val user = getCurrentUser()
+    val targetYearMonth = yearMonth ?: YearMonth.now()
+      return ResponseEntity.ok(dashboardManagementUseCase.getExpensesByCategory(targetYearMonth, user))
+  }
+
   private fun getCurrentUser(): User {
     val authentication = SecurityContextHolder.getContext().authentication
     val username = authentication.name

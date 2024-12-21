@@ -7,4 +7,5 @@ import java.time.YearMonth
 interface DashboardManagementUseCase {
 
   fun getMonthDetails(yearMonth: YearMonth, user: User): DashboardDetailsResponse
+  fun getExpensesByCategory(yearMonth: YearMonth, user: User): Map<String, Double>
 }

@@ -7,6 +7,7 @@ import com.financetracker.domain.model.User
 import com.financetracker.infrastructure.adapters.inbound.dto.request.CreateAccountRequest
 import com.financetracker.infrastructure.adapters.inbound.dto.response.AccountBalanceResponse
 import org.springframework.stereotype.Service
+import java.util.UUID
 
 @Service
 class AccountService(val accountPersistence: AccountPersistence) : AccountManagementUseCase {
@@ -30,5 +31,9 @@ class AccountService(val accountPersistence: AccountPersistence) : AccountManage
       AccountBalanceResponse(
           accountId = it.id!!, name = it.name, org = it.org, type = it.type, balance = it.balance)
     }
+  }
+
+  override fun delete(accountId: UUID, user: User) {
+    accountPersistence.delete(accountId, user)
   }
 }

@@ -12,4 +12,6 @@ interface AccountPersistence {
   fun findByIdAndUser(id: UUID, user: User): Account?
 
   fun findByUser(user: User): List<Account>
+
+  fun delete(accountId: UUID, user: User)
 }

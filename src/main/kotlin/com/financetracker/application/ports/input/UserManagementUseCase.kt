@@ -11,5 +11,7 @@ interface UserManagementUseCase {
 
   fun login(request: LoginRequest): AuthResponse
 
-  fun addExternalCredentials(userId: UUID, externalId: String, externalKey: String)
+  fun addExternalCredentials(userId: UUID, externalKey: String)
+
+  //  fun getFriends(user: User): List<FriendsResponse>
 }

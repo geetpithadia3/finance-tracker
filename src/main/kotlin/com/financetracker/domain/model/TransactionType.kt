@@ -1,8 +1,8 @@
 package com.financetracker.domain.model
 
-enum class TransactionType {
-  DEBIT,
-  CREDIT;
+enum class TransactionType(val value: String) {
+  DEBIT("Debit"),
+  CREDIT("Credit");
 
   companion object {
     fun fromString(type: String): TransactionType {
@@ -15,4 +15,9 @@ enum class TransactionType {
       }
     }
   }
+}
+
+enum class TransactionSubType {
+  SHARED,
+  STANDARD
 }

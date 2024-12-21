@@ -1,6 +1,6 @@
 package com.financetracker.infrastructure.adapters.outbound.persistence.entity
 
-import com.financetracker.domain.model.Category
+import com.financetracker.domain.model.TransactionSubType
 import com.financetracker.domain.model.TransactionType
 import jakarta.persistence.*
 import java.time.LocalDate
@@ -15,7 +15,11 @@ class TransactionEntity {
 
   @Enumerated(EnumType.STRING) lateinit var type: TransactionType
 
-  @Enumerated(EnumType.STRING) lateinit var category: Category
+  @Enumerated(EnumType.STRING) lateinit var subType: TransactionSubType
+
+  @ManyToOne(fetch = FetchType.EAGER)
+  @JoinColumn(name = "category_id")
+  var category: CategoryEntity? = null
 
   lateinit var description: String
 
@@ -28,6 +32,8 @@ class TransactionEntity {
   lateinit var lastSyncedOn: LocalDateTime
 
   var isDeleted: Boolean = false
+
+  @OneToOne(cascade = [CascadeType.PERSIST]) var linkedTransaction: TransactionEntity? = null
 
   @ManyToOne @JoinColumn(name = "account_id", nullable = false) lateinit var account: AccountEntity
 }

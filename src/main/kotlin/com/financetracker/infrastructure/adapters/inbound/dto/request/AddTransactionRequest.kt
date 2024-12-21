@@ -7,7 +7,7 @@ data class AddTransactionRequest(
     val accountId: UUID,
     val amount: Double,
     val description: String,
-    val category: String,
+    val categoryId: UUID,
     val occurredOn: LocalDate,
     val type: String
 )

@@ -18,7 +18,8 @@ class UserService(
     private val userPersistence: UserPersistence,
     private val passwordEncoder: PasswordEncoder,
     private val authenticationManager: AuthenticationManager,
-    private val jwtTokenUtil: JwtTokenUtil
+    //    private val sharingService: SharingService,
+    private val jwtTokenUtil: JwtTokenUtil,
 ) : UserManagementUseCase {
   override fun register(request: RegisterRequest): UUID {
     val user =
@@ -32,10 +33,17 @@ class UserService(
     return AuthResponse(jwtTokenUtil.generateToken(request.username))
   }
 
-  override fun addExternalCredentials(userId: UUID, externalId: String, externalKey: String) {
+  override fun addExternalCredentials(userId: UUID, externalKey: String) {
     val user = userPersistence.findById(userId) ?: throw RuntimeException("User not found")
-    user.externalId = externalId
     user.externalKey = externalKey
-    userPersistence.save(user)
+    userPersistence.update(user)
   }
+
+  //  override fun getFriends(user: User): List<FriendsResponse> {
+  //    return sharingService
+  //        .getFriends(user.externalKey!!)
+  //        .map { FriendsResponse(it.id.toString(), it.firstName!!) }
+  //        .toList()
+  //        .plus(FriendsResponse(user.externalId!!, user.username))
+  //  }
 }
