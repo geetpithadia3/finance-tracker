@@ -57,6 +57,10 @@ class TransactionAdapter(
           }
         }
 
+    if (transaction.amount > 0.0) {
+      existingEntity.amount = transaction.amount
+    }
+
     existingEntity.apply {
       category = categoryEntity ?: category
       subType = transaction.subType ?: subType

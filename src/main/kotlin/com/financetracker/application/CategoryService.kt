@@ -8,6 +8,7 @@ import com.financetracker.infrastructure.adapters.inbound.dto.request.CreateCate
 import com.financetracker.infrastructure.adapters.inbound.dto.request.UpdateCategoryRequest
 import com.financetracker.infrastructure.adapters.inbound.dto.response.CategoryResponse
 import org.springframework.stereotype.Service
+import java.util.*
 
 @Service
 class CategoryService(private val categoryPersistence: CategoryPersistence) :
@@ -26,15 +27,21 @@ class CategoryService(private val categoryPersistence: CategoryPersistence) :
     return CategoryResponse(id, category.name, category.isActive, category.isEditable)
   }
 
-  override fun list(user: User): List<CategoryResponse> {
+  override fun listEnabled(user: User): List<CategoryResponse> {
     return categoryPersistence.findByUser(user).map {
       CategoryResponse(it.id!!, it.name, it.isActive, it.isEditable)
     }
   }
 
-  override fun update(request: UpdateCategoryRequest, user: User): CategoryResponse {
+  override fun listAll(user: User): List<CategoryResponse> {
+    return categoryPersistence.findByUser(user).map {
+      CategoryResponse(it.id!!, it.name, it.isActive, it.isEditable)
+    }
+  }
+
+  override fun update(id: UUID, request: UpdateCategoryRequest, user: User): CategoryResponse {
     val category =
-        categoryPersistence.findByIdAndUser(request.id, user)
+        categoryPersistence.findByIdAndUser(id, user)
             ?: throw NoSuchElementException("Category not found")
 
     if (!category.isEditable) {

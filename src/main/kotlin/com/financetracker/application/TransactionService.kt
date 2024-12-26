@@ -3,17 +3,17 @@ package com.financetracker.application
 import com.financetracker.application.ports.input.TransactionManagementUseCase
 import com.financetracker.application.ports.output.AccountPersistence
 import com.financetracker.application.ports.output.CategoryPersistence
+import com.financetracker.application.ports.output.SharingService
 import com.financetracker.application.ports.output.TransactionPersistence
-import com.financetracker.domain.model.Transaction
-import com.financetracker.domain.model.TransactionSubType
-import com.financetracker.domain.model.TransactionType
-import com.financetracker.domain.model.User
+import com.financetracker.domain.model.*
 import com.financetracker.infrastructure.adapters.inbound.dto.request.AddTransactionRequest
 import com.financetracker.infrastructure.adapters.inbound.dto.request.ListTransactionsByMonthRequest
+import com.financetracker.infrastructure.adapters.inbound.dto.request.SyncAccountRequest
 import com.financetracker.infrastructure.adapters.inbound.dto.request.UpdateTransactionRequest
 import com.financetracker.infrastructure.adapters.inbound.dto.response.TransactionResponse
 import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
+import java.time.LocalDate
 import java.time.LocalDateTime
 import kotlin.math.abs
 
@@ -22,7 +22,7 @@ class TransactionService(
     val transactionPersistence: TransactionPersistence,
     val accountPersistence: AccountPersistence,
     val categoryPersistence: CategoryPersistence,
-    //    val sharingService: SharingService
+    val sharingService: SharingService
 ) : TransactionManagementUseCase {
 
   @Transactional
@@ -70,6 +70,7 @@ class TransactionService(
               occurredOn = transactionRequest.occurredOn,
               lastSyncedAt = LocalDateTime.now(),
               isDeleted = transactionRequest.deleted,
+              amount = transactionRequest.amount,
               accountId = account.id!!)
 
       transactionPersistence.update(transaction)
@@ -191,54 +192,54 @@ class TransactionService(
   //    transactionPersistence.save(creditTransaction)
   //  }
   //
-  //  override fun syncWithSplitwise(request: SyncAccountRequest, user: User) {
-  //    if (user.externalId.isNullOrEmpty() or user.externalKey.isNullOrEmpty()) {
-  //      throw RuntimeException("Please provide external id and key")
-  //    }
-  //
-  //    accountPersistence.findByIdAndUser(request.accountId, user)
-  //        ?: throw RuntimeException("Account not found for user")
-  //
-  //    val lastSyncDate =
-  //        transactionPersistence.getLastSyncTimeForAccount(request.accountId)
-  //            ?: LocalDate.now().minusMonths(3)
-  //
-  //    val transactions: List<SharingTransaction> =
-  //        sharingService.getTransactionsForUser(
-  //            user.externalId!!, user.externalKey!!, lastSyncDate.atTime(0, 0))
-  //
-  //    transactions.forEach { transaction ->
-  //      val existingTransaction =
-  //          transactionPersistence.findByExternalId(transaction.id, request.accountId)
-  //
-  //      val category =
-  //          categoryPersistence.findByNameAndUser(transaction.category, user)
-  //              ?: throw RuntimeException("Category not found: ${transaction.category}")
-  //
-  //      if (existingTransaction == null) {
-  //        val newTransaction =
-  //            Transaction(
-  //                type = TransactionType.fromString(transaction.type.uppercase()),
-  //                amount = transaction.amount,
-  //                description = transaction.description,
-  //                occurredOn = transaction.occurredOn,
-  //                externalId = transaction.id,
-  //                accountId = request.accountId,
-  //                category = category,
-  //                lastSyncedAt = LocalDateTime.now())
-  //
-  //        transactionPersistence.save(newTransaction)
-  //      } else if (existingTransaction.lastSyncedAt!! < transaction.updatedAt) {
-  //        val updatedTransaction =
-  //            existingTransaction.copy(
-  //                amount = transaction.amount,
-  //                description = transaction.description,
-  //                occurredOn = transaction.occurredOn,
-  //                externalId = transaction.id,
-  //                category = category,
-  //                lastSyncedAt = LocalDateTime.now())
-  //        transactionPersistence.save(updatedTransaction)
-  //      }
-  //    }
-  //  }
+  override fun syncWithSplitwise(request: SyncAccountRequest, user: User) {
+    if (user.externalId.isNullOrEmpty() or user.externalKey.isNullOrEmpty()) {
+      throw RuntimeException("Please provide external id and key")
+    }
+
+    accountPersistence.findByIdAndUser(request.accountId, user)
+        ?: throw RuntimeException("Account not found for user")
+
+    val lastSyncDate =
+        transactionPersistence.getLastSyncTimeForAccount(request.accountId)
+            ?: LocalDate.now().minusMonths(3)
+
+    val transactions: List<SharingTransaction> =
+        sharingService.getTransactionsForUser(
+            user.externalId!!, user.externalKey!!, lastSyncDate.atTime(0, 0))
+
+    transactions.forEach { transaction ->
+      val existingTransaction =
+          transactionPersistence.findByExternalId(transaction.id, request.accountId)
+
+      val category =
+          categoryPersistence.findByNameAndUser(transaction.category, user)
+              ?: throw RuntimeException("Category not found: ${transaction.category}")
+
+      if (existingTransaction == null) {
+        val newTransaction =
+            Transaction(
+                type = TransactionType.fromString(transaction.type.uppercase()),
+                amount = transaction.amount,
+                description = transaction.description,
+                occurredOn = transaction.occurredOn,
+                externalId = transaction.id,
+                accountId = request.accountId,
+                category = category,
+                lastSyncedAt = LocalDateTime.now())
+
+        transactionPersistence.save(newTransaction)
+      } else if (existingTransaction.lastSyncedAt!! < transaction.updatedAt) {
+        val updatedTransaction =
+            existingTransaction.copy(
+                amount = transaction.amount,
+                description = transaction.description,
+                occurredOn = transaction.occurredOn,
+                externalId = transaction.id,
+                category = category,
+                lastSyncedAt = LocalDateTime.now())
+        transactionPersistence.save(updatedTransaction)
+      }
+    }
+  }
 }

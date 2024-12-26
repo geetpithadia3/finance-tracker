@@ -9,6 +9,7 @@ import com.financetracker.infrastructure.adapters.outbound.persistence.entity.to
 import com.financetracker.infrastructure.adapters.outbound.persistence.repository.CategoryRepository
 import org.springframework.stereotype.Service
 import java.util.*
+import kotlin.jvm.optionals.getOrNull
 
 @Service
 class CategoryAdapter(private val categoryRepository: CategoryRepository) : CategoryPersistence {
@@ -46,5 +47,9 @@ class CategoryAdapter(private val categoryRepository: CategoryRepository) : Cate
     }
 
     return categoryRepository.save(existingEntity).toModel()
+  }
+
+  override fun findById(categoryId: UUID): Category? {
+    return categoryRepository.findById(categoryId).getOrNull()?.toModel()
   }
 }

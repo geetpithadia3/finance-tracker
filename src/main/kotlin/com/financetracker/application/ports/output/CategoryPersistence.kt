@@ -14,4 +14,6 @@ interface CategoryPersistence {
   fun findByNameAndUser(name: String, user: User): Category?
 
   fun update(category: Category): Category
+
+  fun findById(categoryId: UUID): Category?
 }

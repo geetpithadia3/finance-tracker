@@ -4,6 +4,7 @@ import com.financetracker.application.ports.input.TransactionManagementUseCase
 import com.financetracker.domain.model.User
 import com.financetracker.infrastructure.adapters.inbound.dto.request.AddTransactionRequest
 import com.financetracker.infrastructure.adapters.inbound.dto.request.ListTransactionsByMonthRequest
+import com.financetracker.infrastructure.adapters.inbound.dto.request.SyncAccountRequest
 import com.financetracker.infrastructure.adapters.inbound.dto.request.UpdateTransactionRequest
 import com.financetracker.infrastructure.adapters.inbound.dto.response.TransactionResponse
 import com.financetracker.infrastructure.adapters.outbound.persistence.repository.UserRepository
@@ -72,19 +73,19 @@ class TransactionController(
     }
   }
 
-  //  @PostMapping("/sync-transactions")
-  //  fun syncTransactions(@RequestBody request: SyncAccountRequest): ResponseEntity<Unit> {
-  //    val user = getCurrentUser()
-  //    logger.info("Received request to sync transactions for user: ${user.username}")
-  //    return try {
-  //      transactionManagementUseCase.syncWithSplitwise(request, user)
-  //      logger.info("Successfully synced transactions for user: ${user.username}")
-  //      ResponseEntity.ok().build()
-  //    } catch (e: Exception) {
-  //      logger.error("Error syncing transactions for user: ${user.username}", e)
-  //      throw e
-  //    }
-  //  }
+  @PostMapping("/sync-transactions")
+  fun syncTransactions(@RequestBody request: SyncAccountRequest): ResponseEntity<Unit> {
+    val user = getCurrentUser()
+    logger.info("Received request to sync transactions for user: ${user.username}")
+    return try {
+      transactionManagementUseCase.syncWithSplitwise(request, user)
+      logger.info("Successfully synced transactions for user: ${user.username}")
+      ResponseEntity.ok().build()
+    } catch (e: Exception) {
+      logger.error("Error syncing transactions for user: ${user.username}", e)
+      throw e
+    }
+  }
 
   //  @PutMapping("/transactions/share")
   //  fun shareTransaction(@RequestBody request: UpdateTransactionSharesRequest):

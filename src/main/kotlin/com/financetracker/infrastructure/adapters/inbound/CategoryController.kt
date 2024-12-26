@@ -17,10 +17,16 @@ class CategoryController(
     private val categoryManagementUseCase: CategoryManagementUseCase,
     private val userRepository: UserRepository
 ) {
-  @GetMapping
+  @GetMapping("/all")
   fun listCategories(): ResponseEntity<List<CategoryResponse>> {
     val user = getCurrentUser()
-    return ResponseEntity.ok(categoryManagementUseCase.list(user))
+    return ResponseEntity.ok(categoryManagementUseCase.listAll(user))
+  }
+
+  @GetMapping
+  fun listEnabledCategories(): ResponseEntity<List<CategoryResponse>> {
+    val user = getCurrentUser()
+    return ResponseEntity.ok(categoryManagementUseCase.listEnabled(user))
   }
 
   @PostMapping
@@ -37,7 +43,7 @@ class CategoryController(
       @RequestBody request: UpdateCategoryRequest
   ): ResponseEntity<CategoryResponse> {
     val user = getCurrentUser()
-    return ResponseEntity.ok(categoryManagementUseCase.update(request, user))
+    return ResponseEntity.ok(categoryManagementUseCase.update(id, request, user))
   }
 
   private fun getCurrentUser(): User {
