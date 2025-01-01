@@ -22,11 +22,16 @@ class UserService(
     private val authenticationManager: AuthenticationManager,
     private val sharingService: SharingService,
     private val jwtTokenUtil: JwtTokenUtil,
+    private val categorySeedingService: CategorySeedingService
 ) : UserManagementUseCase {
   override fun register(request: RegisterRequest): UUID {
     val user =
         User(username = request.username, password = passwordEncoder.encode(request.password))
-    return userPersistence.save(user)
+    val userId = userPersistence.save(user)
+
+    categorySeedingService.seedDefaultCategories(userId)
+
+    return userId
   }
 
   override fun login(request: LoginRequest): AuthResponse {
