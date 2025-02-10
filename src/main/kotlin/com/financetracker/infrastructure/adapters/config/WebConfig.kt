@@ -1,17 +1,16 @@
 package com.financetracker.infrastructure.adapters.config
 
-import org.springframework.context.annotation.Configuration
 import org.springframework.web.servlet.config.annotation.CorsRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 
-@Configuration
+// @Configuration
 class WebConfig : WebMvcConfigurer {
   override fun addCorsMappings(registry: CorsRegistry) {
     registry
         .addMapping("/**")
         .allowedOrigins(
             "http://localhost:3000",
-            "http://127.0.0.1:3000"
+            "http://127.0.0.1:3000",
         )
         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
         .allowedHeaders(
@@ -22,14 +21,11 @@ class WebConfig : WebMvcConfigurer {
             "Origin",
             "Access-Control-Request-Method",
             "Access-Control-Request-Headers",
-            "Access-Control-Allow-Origin"
-        )
+            "Access-Control-Allow-Origin")
         .exposedHeaders(
-            "Authorization",
-            "Access-Control-Allow-Origin",
-            "Access-Control-Allow-Credentials"
-        )
+            "Authorization", "Access-Control-Allow-Origin", "Access-Control-Allow-Credentials")
         .allowCredentials(true)
+        .allowedOrigins("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**")
         .maxAge(3600)
   }
 }

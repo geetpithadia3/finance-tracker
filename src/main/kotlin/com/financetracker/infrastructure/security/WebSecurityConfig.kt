@@ -24,15 +24,25 @@ class WebSecurityConfig(private val jwtRequestFilter: JwtRequestFilter) {
         .cors {
           it.configurationSource {
             val configuration = CorsConfiguration()
-            configuration.allowedOrigins = listOf("*")
-            configuration.allowedMethods = listOf("*")
-            configuration.allowedHeaders = listOf("Authorization", "Content-Type")
+            configuration.allowedOrigins =
+                listOf("http://localhost:3000") // Add your production URL here
+            configuration.allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS")
+            configuration.allowedHeaders =
+                listOf("Authorization", "Content-Type", "Origin", "Accept")
+            configuration.allowCredentials = true
             configuration
           }
         }
         .authorizeHttpRequests { auth ->
           auth
-              .requestMatchers("/auth/register", "/auth/login")
+              .requestMatchers(
+                  "/auth/register",
+                  "/auth/login",
+                  "/v3/api-docs/**",
+                  "/swagger-ui/**",
+                  "/swagger-ui.html",
+                  "/swagger-resources/**",
+                  "/webjars/**")
               .permitAll()
               .anyRequest()
               .authenticated()

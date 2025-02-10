@@ -12,9 +12,9 @@ import com.financetracker.domain.model.User
 import com.financetracker.infrastructure.adapters.inbound.dto.request.CreateBudgetRequest
 import com.financetracker.infrastructure.adapters.inbound.dto.request.UpdateBudgetRequest
 import com.financetracker.infrastructure.adapters.inbound.dto.response.*
-import org.springframework.stereotype.Service
 import java.time.YearMonth
 import java.util.*
+import org.springframework.stereotype.Service
 
 @Service
 class BudgetService(
@@ -58,13 +58,12 @@ class BudgetService(
     val budget =
         budgetPersistence.findByUserAndYearMonth(user, yearMonth)
             ?: budgetPersistence.findLatestBeforeYearMonth(user, yearMonth)
-    
+
     if (budget == null) {
-        return BudgetDetailsResponse(
-            id = UUID.randomUUID(), // Generate temporary ID for response
-            yearMonth = yearMonth,
-            categories = emptyList()
-        )
+      return BudgetDetailsResponse(
+          id = UUID.randomUUID(), // Generate temporary ID for response
+          yearMonth = yearMonth,
+          categories = emptyList())
     }
 
     val startDate = yearMonth.atDay(1)
@@ -168,9 +167,10 @@ class BudgetService(
         categoryPersistence.findByIdAndUser(categoryId, user)
             ?: throw IllegalArgumentException("Category not found: $categoryId")
 
-    if (category.name == "Transfer" || category.name == "Income") {
-      throw IllegalArgumentException("Cannot manually set budget for ${category.name} category")
-    }
+    //    if (category.name == "Transfer" || category.name == "Income") {
+    //      throw IllegalArgumentException("Cannot manually set budget for ${category.name}
+    // category")
+    //    }
   }
 
   private fun addIncomeBudget(

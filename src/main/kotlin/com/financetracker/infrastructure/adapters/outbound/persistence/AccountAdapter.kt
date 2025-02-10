@@ -18,7 +18,6 @@ class AccountAdapter(val accountRepository: AccountRepository) : AccountPersiste
     if (account.id == null) {
       entity = mapToEntity(account)
     } else {
-
       entity = accountRepository.findById(account.id!!).orElse(mapToEntity(account))
     }
     entity?.balance = account.balance
@@ -51,8 +50,6 @@ class AccountAdapter(val accountRepository: AccountRepository) : AccountPersiste
   private fun mapToDomain(entity: AccountEntity): Account {
     return Account(
         id = entity.id,
-        type = entity.type,
-        org = entity.org,
         balance = entity.balance,
         name = entity.name,
         userId = entity.user.id)
@@ -62,8 +59,6 @@ class AccountAdapter(val accountRepository: AccountRepository) : AccountPersiste
     val accountEntity =
         AccountEntity().apply {
           name = domain.name
-          type = domain.type
-          org = domain.org
           balance = domain.balance
           user = UserEntity().apply { id = domain.userId }
         }
