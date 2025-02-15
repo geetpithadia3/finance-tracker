@@ -40,6 +40,7 @@ class TransactionAdapter(
               lastSyncedOn = transaction.lastSyncedAt!!
               subType = transaction.subType!!
               account = AccountEntity().apply { id = transaction.accountId }
+              refunded = transaction.refunded
             })
         .id
   }
@@ -69,6 +70,7 @@ class TransactionAdapter(
       occurredOn = transaction.occurredOn ?: occurredOn
       lastSyncedOn = transaction.lastSyncedAt ?: lastSyncedOn
       isDeleted = transaction.isDeleted
+      refunded = transaction.refunded
     }
 
     return transactionRepository.save(existingEntity).id
@@ -109,9 +111,11 @@ class TransactionAdapter(
                         occurredOn = it.occurredOn,
                         amount = it.amount,
                         lastSyncedAt = it.lastSyncedOn,
-                        accountId = it.account.id)
+                        accountId = it.account.id,
+                        refunded = it.refunded)
                   },
-              lastSyncedAt = it.lastSyncedOn)
+              lastSyncedAt = it.lastSyncedOn,
+              refunded = it.refunded)
         }
   }
 
@@ -149,7 +153,8 @@ class TransactionAdapter(
                         lastSyncedAt = it.lastSyncedOn,
                         accountId = it.account.id)
                   },
-              lastSyncedAt = it.lastSyncedOn)
+              lastSyncedAt = it.lastSyncedOn,
+              refunded = it.refunded)
         }
   }
 

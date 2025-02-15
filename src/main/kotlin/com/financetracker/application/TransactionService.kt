@@ -12,10 +12,10 @@ import com.financetracker.infrastructure.adapters.inbound.dto.request.SyncAccoun
 import com.financetracker.infrastructure.adapters.inbound.dto.request.UpdateTransactionRequest
 import com.financetracker.infrastructure.adapters.inbound.dto.response.TransactionResponse
 import jakarta.transaction.Transactional
-import org.springframework.stereotype.Service
 import java.time.LocalDate
 import java.time.LocalDateTime
 import kotlin.math.abs
+import org.springframework.stereotype.Service
 
 @Service
 class TransactionService(
@@ -71,7 +71,8 @@ class TransactionService(
               lastSyncedAt = LocalDateTime.now(),
               isDeleted = transactionRequest.deleted,
               amount = transactionRequest.amount,
-              accountId = account.id!!)
+              accountId = account.id!!,
+              refunded = transactionRequest.refunded)
 
       transactionPersistence.update(transaction)
     }
@@ -98,7 +99,8 @@ class TransactionService(
               amount = it.amount,
               shareable = it.externalId == null,
               occurredOn = it.occurredOn!!,
-              account = it.accountId)
+              account = it.accountId,
+              refunded = it.refunded)
         }
   }
 

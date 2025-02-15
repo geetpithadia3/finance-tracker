@@ -12,5 +12,6 @@ data class TransactionResponse(
     var amount: Double = 0.0,
     val occurredOn: LocalDate,
     val shareable: Boolean,
-    val account: UUID
+    val account: UUID,
+    val refunded: Boolean
 )

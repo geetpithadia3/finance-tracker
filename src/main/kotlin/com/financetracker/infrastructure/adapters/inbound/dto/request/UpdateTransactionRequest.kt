@@ -12,6 +12,7 @@ data class UpdateTransactionRequest(
     val occurredOn: LocalDate,
     val deleted: Boolean,
     val account: UUID,
+    val refunded: Boolean
 )
 
 data class UpdateTransactionSharesRequest(

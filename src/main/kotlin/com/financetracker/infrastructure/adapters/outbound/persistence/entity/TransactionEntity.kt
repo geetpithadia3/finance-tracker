@@ -2,10 +2,12 @@ package com.financetracker.infrastructure.adapters.outbound.persistence.entity
 
 import com.financetracker.domain.model.TransactionSubType
 import com.financetracker.domain.model.TransactionType
+import jakarta.annotation.Nullable
 import jakarta.persistence.*
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
+import org.hibernate.annotations.ColumnDefault
 
 @Entity
 @Table(name = "transaction_entity")
@@ -36,4 +38,6 @@ class TransactionEntity {
   @OneToOne(cascade = [CascadeType.PERSIST]) var linkedTransaction: TransactionEntity? = null
 
   @ManyToOne @JoinColumn(name = "account_id", nullable = false) lateinit var account: AccountEntity
+
+  @ColumnDefault("false") var refunded: Boolean = false
 }
