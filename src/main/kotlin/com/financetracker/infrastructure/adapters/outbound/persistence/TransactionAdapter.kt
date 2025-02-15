@@ -10,10 +10,10 @@ import com.financetracker.infrastructure.adapters.outbound.persistence.entity.Tr
 import com.financetracker.infrastructure.adapters.outbound.persistence.entity.toModel
 import com.financetracker.infrastructure.adapters.outbound.persistence.repository.CategoryRepository
 import com.financetracker.infrastructure.adapters.outbound.persistence.repository.TransactionRepository
-import org.springframework.stereotype.Service
 import java.time.LocalDate
 import java.time.YearMonth
 import java.util.*
+import org.springframework.stereotype.Service
 
 @Service
 class TransactionAdapter(
@@ -71,6 +71,9 @@ class TransactionAdapter(
       lastSyncedOn = transaction.lastSyncedAt ?: lastSyncedOn
       isDeleted = transaction.isDeleted
       refunded = transaction.refunded
+      personalShare = transaction.personalShare
+      owedShare = transaction.owedShare
+      shareMetadata = transaction.shareMetadata
     }
 
     return transactionRepository.save(existingEntity).id
@@ -112,10 +115,16 @@ class TransactionAdapter(
                         amount = it.amount,
                         lastSyncedAt = it.lastSyncedOn,
                         accountId = it.account.id,
-                        refunded = it.refunded)
+                        refunded = it.refunded,
+                        personalShare = it.personalShare,
+                        owedShare = it.owedShare,
+                        shareMetadata = it.shareMetadata)
                   },
               lastSyncedAt = it.lastSyncedOn,
-              refunded = it.refunded)
+              refunded = it.refunded,
+              personalShare = it.personalShare,
+              owedShare = it.owedShare,
+              shareMetadata = it.shareMetadata)
         }
   }
 
@@ -151,10 +160,17 @@ class TransactionAdapter(
                         occurredOn = it.occurredOn,
                         amount = it.amount,
                         lastSyncedAt = it.lastSyncedOn,
-                        accountId = it.account.id)
+                        accountId = it.account.id,
+                        refunded = it.refunded,
+                        personalShare = it.personalShare,
+                        owedShare = it.owedShare,
+                        shareMetadata = it.shareMetadata)
                   },
               lastSyncedAt = it.lastSyncedOn,
-              refunded = it.refunded)
+              refunded = it.refunded,
+              personalShare = it.personalShare,
+              owedShare = it.owedShare,
+              shareMetadata = it.shareMetadata)
         }
   }
 
@@ -182,7 +198,11 @@ class TransactionAdapter(
           amount = it.amount,
           accountId = it.account.id,
           category = it.category?.toModel(),
-          lastSyncedAt = it.lastSyncedOn)
+          lastSyncedAt = it.lastSyncedOn,
+          refunded = it.refunded,
+          personalShare = it.personalShare,
+          owedShare = it.owedShare,
+          shareMetadata = it.shareMetadata)
     }
   }
 }

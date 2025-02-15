@@ -2,7 +2,6 @@ package com.financetracker.infrastructure.adapters.outbound.persistence.entity
 
 import com.financetracker.domain.model.TransactionSubType
 import com.financetracker.domain.model.TransactionType
-import jakarta.annotation.Nullable
 import jakarta.persistence.*
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -40,4 +39,10 @@ class TransactionEntity {
   @ManyToOne @JoinColumn(name = "account_id", nullable = false) lateinit var account: AccountEntity
 
   @ColumnDefault("false") var refunded: Boolean = false
+
+  @ColumnDefault("0.0") var personalShare: Double = 0.0
+
+  @ColumnDefault("0.0") var owedShare: Double = 0.0
+
+  @ColumnDefault("null") var shareMetadata: String? = null
 }

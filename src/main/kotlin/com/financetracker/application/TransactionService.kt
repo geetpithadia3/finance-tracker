@@ -72,7 +72,10 @@ class TransactionService(
               isDeleted = transactionRequest.deleted,
               amount = transactionRequest.amount,
               accountId = account.id!!,
-              refunded = transactionRequest.refunded)
+              refunded = transactionRequest.refunded,
+              personalShare = transactionRequest.personalShare,
+              owedShare = transactionRequest.owedShare,
+              shareMetadata = transactionRequest.shareMetadata)
 
       transactionPersistence.update(transaction)
     }
@@ -100,7 +103,10 @@ class TransactionService(
               shareable = it.externalId == null,
               occurredOn = it.occurredOn!!,
               account = it.accountId,
-              refunded = it.refunded)
+              refunded = it.refunded,
+              personalShare = it.personalShare,
+              owedShare = it.owedShare,
+              shareMetadata = it.shareMetadata)
         }
   }
 

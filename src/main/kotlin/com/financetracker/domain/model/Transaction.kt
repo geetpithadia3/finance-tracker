@@ -19,21 +19,27 @@ data class Transaction(
     val lastSyncedAt: LocalDateTime? = null,
     val isDeleted: Boolean = false,
     val linkedTransaction: Transaction? = null,
-    val refunded: Boolean = false
+    val refunded: Boolean = false,
+    val personalShare: Double = 0.0,
+    val owedShare: Double = 0.0,
+    val shareMetadata: String? = null
 )
 
 fun Transaction.toEntity(): TransactionEntity {
-    return TransactionEntity().apply {
-        type = this@toEntity.type ?: type
-        subType = this@toEntity.subType ?: subType
-        category = this@toEntity.category?.toEntity()!!
-        description = this@toEntity.description ?: description
-        amount = this@toEntity.amount
-        externalId = this@toEntity.externalId ?: externalId
-        occurredOn = this@toEntity.occurredOn ?: occurredOn
-        linkedTransaction = this@toEntity.linkedTransaction?.toEntity()
-        lastSyncedOn = (this@toEntity.lastSyncedAt ?: lastSyncedAt)!!
-        account = AccountEntity().apply { id = this@toEntity.accountId }
-        refunded = this@toEntity.refunded
-    }
+  return TransactionEntity().apply {
+    type = this@toEntity.type ?: type
+    subType = this@toEntity.subType ?: subType
+    category = this@toEntity.category?.toEntity()!!
+    description = this@toEntity.description ?: description
+    amount = this@toEntity.amount
+    externalId = this@toEntity.externalId ?: externalId
+    occurredOn = this@toEntity.occurredOn ?: occurredOn
+    linkedTransaction = this@toEntity.linkedTransaction?.toEntity()
+    lastSyncedOn = (this@toEntity.lastSyncedAt ?: lastSyncedAt)!!
+    account = AccountEntity().apply { id = this@toEntity.accountId }
+    refunded = this@toEntity.refunded
+    personalShare = this@toEntity.personalShare
+    owedShare = this@toEntity.owedShare
+    shareMetadata = this@toEntity.shareMetadata
+  }
 }
