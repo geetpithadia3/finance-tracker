@@ -12,18 +12,16 @@ import com.financetracker.infrastructure.adapters.outbound.splitwise.dto.Expense
 import com.financetracker.infrastructure.adapters.outbound.splitwise.dto.FriendsWrapper
 import com.financetracker.infrastructure.adapters.outbound.splitwise.dto.SplitwiseExpenseList
 import com.financetracker.infrastructure.adapters.outbound.splitwise.dto.User
+import java.time.LocalDate
+import java.time.LocalDateTime
 import okhttp3.FormBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.time.LocalDate
-import java.time.LocalDateTime
 
 @Service
-class SplitwiseSharingService(@Value("\${app.splitwise.api.url}") var splitwiseApiUrl: String) :
-    SharingService {
+class SplitwiseSharingService(var splitwiseApiUrl: String = "") : SharingService {
   private val logger = LoggerFactory.getLogger(SplitwiseSharingService::class.java)
 
   override fun getTransactionsForUser(

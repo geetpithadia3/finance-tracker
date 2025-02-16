@@ -5,19 +5,18 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.financetracker.infrastructure.adapters.inbound.dto.request.SplitShare
 import com.financetracker.infrastructure.adapters.outbound.splitwise.dto.*
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import okhttp3.FormBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
 @Service
 class SplitwiseService {
 
-  @Value("\${app.splitwise.api.key}") lateinit var splitwiseApiKey: String
-  @Value("\${app.splitwise.api.url}") lateinit var splitwiseApiUrl: String
+  var splitwiseApiKey: String = ""
+  var splitwiseApiUrl: String = "https://secure.splitwise.com/api/v3.0"
 
   private val client = OkHttpClient()
   private val mapper =

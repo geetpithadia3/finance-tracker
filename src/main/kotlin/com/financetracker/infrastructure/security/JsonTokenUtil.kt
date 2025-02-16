@@ -12,9 +12,9 @@ import java.util.*
 @Component
 class JwtTokenUtil {
 
-  @Value("\${jwt.secret}") private lateinit var secret: String
+  @Value("\${JWT_SECRET}") private lateinit var secret: String
 
-  @Value("\${jwt.expiration}") private var jwtExpiration: Long = 0
+  private var jwtExpiration: Long = 86400
 
   fun generateToken(username: String): String {
     val claims: Map<String, Any> = HashMap()
