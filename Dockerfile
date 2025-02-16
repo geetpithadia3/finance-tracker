@@ -33,11 +33,19 @@ COPY --from=build /app/build/libs/*.jar tracker.jar
 EXPOSE 8080
 
 # Set environment variables for database connection
-ENV DB_HOST=host.docker.internal
-ENV DB_PORT=5432
-ENV DB_NAME=geetpithadia
-ENV DB_USER=geetpithadia
-ENV DB_PASSWORD=admin
+ARG JWT_SECRET
+ARG DB_HOST
+ARG DB_PORT
+ARG DB_NAME
+ARG DB_USER
+ARG DB_PASSWORD
+
+ENV JWT_SECRET=${JWT_SECRET}
+ENV DB_HOST=${DB_HOST}
+ENV DB_PORT=${DB_PORT}
+ENV DB_NAME=${DB_NAME}
+ENV DB_USER=${DB_USER}
+ENV DB_PASSWORD=${DB_PASSWORD}
 
 # Set the entry point for the container
 ENTRYPOINT ["java", "-jar", "-Dspring.profiles.active=default", "tracker.jar"]
