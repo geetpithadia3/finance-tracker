@@ -49,6 +49,7 @@ dependencies {
   compileOnly("org.projectlombok:lombok:1.18.30")
 
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
+   implementation("org.springframework.boot:spring-boot-starter-actuator")
 }
 
 tasks.withType<KotlinCompile> {
