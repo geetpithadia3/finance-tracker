@@ -19,41 +19,46 @@ class WebSecurityConfig(private val jwtRequestFilter: JwtRequestFilter) {
 
   @Bean
   fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
-    http
+    return http
         .csrf { it.disable() }
         .cors {
           it.configurationSource {
             val configuration = CorsConfiguration()
-            configuration.allowedOrigins = listOf("*")
-            configuration.allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS")
-            configuration.allowedHeaders =
-                listOf("*")
-            configuration.allowCredentials = false
+            configuration.allowedOrigins = listOf(
+               "http://localhost:3000",
+               "http://127.0.0.1:3000",
+               "http://ec2-3-90-239-241.compute-1.amazonaws.com"
+            )
+            configuration.allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
+            configuration.allowedHeaders = listOf(
+                "Authorization",
+                "Content-Type",
+                "X-Requested-With",
+                "Accept",
+                "Origin",
+                "Access-Control-Request-Method",
+                "Access-Control-Request-Headers"
+            )
+            configuration.exposedHeaders = listOf(
+                "Authorization",
+                "Access-Control-Allow-Origin",
+                "Access-Control-Allow-Credentials"
+            )
+            configuration.allowCredentials = true
+            configuration.maxAge = 3600L
             configuration
           }
         }
-        .authorizeHttpRequests { auth ->
-          auth
-              .requestMatchers(
-                  "/auth/register",
-                  "/auth/login",
-                  "/v3/api-docs/**",
-                  "/swagger-ui/**",
-                  "/swagger-ui.html",
-                  "/swagger-resources/**",
-                  "/webjars/**",
-                  "/actuator/**"
-              )
-              .permitAll()
-              .anyRequest()
-              .authenticated()
+        .authorizeHttpRequests {
+          it.requestMatchers("/auth/**").permitAll()
+             .requestMatchers("/actuator/**").permitAll()
+             .anyRequest().authenticated()
         }
-        .sessionManagement { session ->
-          session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+        .sessionManagement {
+          it.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
         }
         .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter::class.java)
-
-    return http.build()
+        .build()
   }
 
   @Bean
