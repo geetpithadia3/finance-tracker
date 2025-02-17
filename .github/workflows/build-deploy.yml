@@ -84,13 +84,23 @@ jobs:
             IMAGE_NAME="ghcr.io/${{ github.repository }}:latest"
             docker pull $IMAGE_NAME
             
-            # Stop and remove the existing container if it exists
-            docker stop tracker || true
-            docker rm tracker || true
+            # Define container name
+            CONTAINER_NAME="tracker"
             
+            # Stop and remove the existing container if it exists
+            if docker ps -a | grep -q $CONTAINER_NAME; then
+              echo "Stopping existing container..."
+              docker stop $CONTAINER_NAME
+              echo "Removing existing container..."
+              docker rm $CONTAINER_NAME
+            else
+              echo "No existing container found"
+            fi
+            
+            echo "Starting new container..."
             # Run the new container
             docker run -d \
-              --name tracker \
+              --name $CONTAINER_NAME \
               -p 8080:8080 \
               --env-file .env \
               --health-cmd="curl -f http://localhost:8080/actuator/health || exit 1" \
