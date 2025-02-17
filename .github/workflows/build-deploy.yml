@@ -80,10 +80,17 @@ jobs:
             DB_PASSWORD=${{ secrets.DB_PASSWORD }}
             EOF
             
-            # Pull and run the new image
+            # Pull the new image
             docker pull ${{ needs.build.outputs.image }}
+
+            echo "Pulled Docker container: ${{ needs.build.outputs.image }}"
+            docker images
+            
+            # Stop and remove the existing container if it exists
             docker stop tracker || true
             docker rm tracker || true
+            
+            # Run the new container
             docker run -d \
               --name tracker \
               -p 8080:8080 \
