@@ -24,12 +24,11 @@ class WebSecurityConfig(private val jwtRequestFilter: JwtRequestFilter) {
         .cors {
           it.configurationSource {
             val configuration = CorsConfiguration()
-            configuration.allowedOrigins =
-                listOf("http://localhost:3000") // Add your production URL here
+            configuration.allowedOrigins = listOf("*")
             configuration.allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS")
             configuration.allowedHeaders =
                 listOf("Authorization", "Content-Type", "Origin", "Accept")
-            configuration.allowCredentials = true
+            configuration.allowCredentials = false
             configuration
           }
         }
@@ -42,7 +41,9 @@ class WebSecurityConfig(private val jwtRequestFilter: JwtRequestFilter) {
                   "/swagger-ui/**",
                   "/swagger-ui.html",
                   "/swagger-resources/**",
-                  "/webjars/**")
+                  "/webjars/**",
+                  "/actuator/**"
+              )
               .permitAll()
               .anyRequest()
               .authenticated()
