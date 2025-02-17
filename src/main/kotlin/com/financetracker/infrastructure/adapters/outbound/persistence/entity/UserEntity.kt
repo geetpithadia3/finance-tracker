@@ -1,6 +1,5 @@
 package com.financetracker.infrastructure.adapters.outbound.persistence.entity
 
-import com.financetracker.infrastructure.adapters.outbound.persistence.entity.goal.PayScheduleEntity
 import jakarta.persistence.*
 import java.util.*
 
@@ -19,7 +18,4 @@ class UserEntity {
 
   @OneToMany(mappedBy = "user", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
   var accounts: MutableList<AccountEntity> = mutableListOf()
-
-  @OneToMany(mappedBy = "user", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
-  var paySchedules: MutableList<PayScheduleEntity> = mutableListOf()
 }

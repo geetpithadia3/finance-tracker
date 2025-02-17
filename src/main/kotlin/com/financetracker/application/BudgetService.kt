@@ -21,8 +21,7 @@ class BudgetService(
     private val budgetPersistence: BudgetPersistence,
     private val categoryPersistence: CategoryPersistence,
     private val transactionPersistence: TransactionPersistence,
-    private val accountPersistence: AccountPersistence,
-    private val incomeSourceService: IncomeSourceService
+    private val accountPersistence: AccountPersistence
 ) : BudgetManagementUseCase {
 
   override fun createBudget(request: CreateBudgetRequest, user: User): BudgetResponse {
@@ -36,19 +35,15 @@ class BudgetService(
           CategoryBudget(categoryId = it.categoryId, budgetAmount = it.budgetAmount)
         }
 
-    // Add income budget automatically
-    val allCategoryLimits = addIncomeBudget(categoryLimits, user)
-
     val existingBudget = budgetPersistence.findByUserAndYearMonth(user, request.yearMonth)
 
     return if (existingBudget != null) {
-      val updatedBudget = existingBudget.copy(categoryLimits = allCategoryLimits)
+      val updatedBudget = existingBudget.copy(categoryLimits = categoryLimits)
       val savedBudget = budgetPersistence.update(updatedBudget)
       mapToBudgetResponse(savedBudget, user)
     } else {
       val budget =
-          Budget(
-              userId = user.id!!, yearMonth = request.yearMonth, categoryLimits = allCategoryLimits)
+          Budget(userId = user.id!!, yearMonth = request.yearMonth, categoryLimits = categoryLimits)
       val savedBudget = budgetPersistence.save(budget)
       mapToBudgetResponse(savedBudget, user)
     }
@@ -138,10 +133,7 @@ class BudgetService(
           CategoryBudget(categoryId = it.categoryId, budgetAmount = it.budgetAmount)
         }
 
-    // Add income budget automatically
-    val allCategoryLimits = addIncomeBudget(categoryLimits, user)
-
-    val updatedBudget = existingBudget.copy(categoryLimits = allCategoryLimits)
+    val updatedBudget = existingBudget.copy(categoryLimits = categoryLimits)
 
     val savedBudget = budgetPersistence.update(updatedBudget)
     return mapToBudgetResponse(savedBudget, user)
@@ -171,20 +163,6 @@ class BudgetService(
     //      throw IllegalArgumentException("Cannot manually set budget for ${category.name}
     // category")
     //    }
-  }
-
-  private fun addIncomeBudget(
-      categoryLimits: List<CategoryBudget>,
-      user: User
-  ): List<CategoryBudget> {
-    val incomeCategory =
-        categoryPersistence.findByNameAndUser("Income", user)
-            ?: throw RuntimeException("Income category not found")
-
-    val monthlyIncome = incomeSourceService.calculateMonthlyIncome(user)
-
-    return categoryLimits +
-        CategoryBudget(categoryId = incomeCategory.id!!, budgetAmount = monthlyIncome)
   }
 
   override fun getBudgetableCategories(user: User): List<CategoryResponse> {
