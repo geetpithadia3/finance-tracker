@@ -2,21 +2,15 @@ package com.financetracker.infrastructure.adapters.outbound.persistence
 
 import com.financetracker.application.ports.output.UserPersistence
 import com.financetracker.domain.model.User
-import com.financetracker.infrastructure.adapters.outbound.persistence.entity.UserEntity
 import com.financetracker.infrastructure.adapters.outbound.persistence.repository.UserRepository
+import com.financetracker.infrastructure.adapters.outbound.persistence.utils.toEntity
 import java.util.*
 import org.springframework.stereotype.Service
 
 @Service
 class UserAdapter(val userRepository: UserRepository) : UserPersistence {
   override fun save(user: User): UUID {
-    return userRepository
-        .save(
-            UserEntity().apply {
-              username = user.username
-              password = user.password
-            })
-        .id
+    return userRepository.save(user.toEntity()).id
   }
 
   override fun findById(id: UUID): User? {
@@ -27,8 +21,7 @@ class UserAdapter(val userRepository: UserRepository) : UserPersistence {
               id = entity.id,
               username = entity.username,
               password = entity.password,
-              externalId = entity.externalId,
-              externalKey = entity.externalKey)
+          )
         }
         .orElse(null)
   }

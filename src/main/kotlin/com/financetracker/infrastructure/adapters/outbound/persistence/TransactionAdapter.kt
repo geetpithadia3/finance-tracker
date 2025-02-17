@@ -4,18 +4,20 @@ import com.financetracker.application.ports.output.TransactionPersistence
 import com.financetracker.domain.model.Account
 import com.financetracker.domain.model.Transaction
 import com.financetracker.domain.model.TransactionType
-import com.financetracker.domain.model.toEntity
 import com.financetracker.infrastructure.adapters.outbound.persistence.entity.AccountEntity
-import com.financetracker.infrastructure.adapters.outbound.persistence.entity.TransactionEntity
-import com.financetracker.infrastructure.adapters.outbound.persistence.entity.toModel
 import com.financetracker.infrastructure.adapters.outbound.persistence.repository.CategoryRepository
 import com.financetracker.infrastructure.adapters.outbound.persistence.repository.TransactionRepository
+import com.financetracker.infrastructure.adapters.outbound.persistence.utils.toEntity
+import com.financetracker.infrastructure.adapters.outbound.persistence.utils.toModel
+import com.financetracker.infrastructure.adapters.outbound.persistence.utils.updateFromModel
 import java.time.LocalDate
 import java.time.YearMonth
 import java.util.*
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
+@Transactional
 class TransactionAdapter(
     private val transactionRepository: TransactionRepository,
     private val categoryRepository: CategoryRepository
@@ -28,21 +30,7 @@ class TransactionAdapter(
           }
         }
 
-    return transactionRepository
-        .save(
-            TransactionEntity().apply {
-              type = transaction.type!!
-              category = categoryEntity!!
-              description = transaction.description!!
-              amount = transaction.amount
-              externalId = transaction.externalId
-              occurredOn = transaction.occurredOn!!
-              lastSyncedOn = transaction.lastSyncedAt!!
-              subType = transaction.subType!!
-              account = AccountEntity().apply { id = transaction.accountId }
-              refunded = transaction.refunded
-            })
-        .id
+    return transactionRepository.save(transaction.toEntity(categoryEntity)).id
   }
 
   override fun update(transaction: Transaction): UUID {
@@ -62,19 +50,9 @@ class TransactionAdapter(
       existingEntity.amount = transaction.amount
     }
 
-    existingEntity.apply {
-      category = categoryEntity ?: category
-      subType = transaction.subType ?: subType
-      linkedTransaction = transaction.linkedTransaction?.toEntity()
-      description = transaction.description ?: description
-      occurredOn = transaction.occurredOn ?: occurredOn
-      lastSyncedOn = transaction.lastSyncedAt ?: lastSyncedOn
-      isDeleted = transaction.isDeleted
-      refunded = transaction.refunded
-      personalShare = transaction.personalShare
-      owedShare = transaction.owedShare
-      shareMetadata = transaction.shareMetadata
-    }
+    existingEntity.updateFromModel(transaction)
+
+    existingEntity.apply { category = categoryEntity ?: category }
 
     return transactionRepository.save(existingEntity).id
   }
@@ -93,39 +71,7 @@ class TransactionAdapter(
             startDate = startDate,
             endDate = endDate)
         .filter { it.isDeleted == isDeleted }
-        .map {
-          Transaction(
-              id = it.id,
-              type = it.type,
-              description = it.description,
-              occurredOn = it.occurredOn,
-              amount = it.amount,
-              accountId = it.account.id,
-              category = it.category?.toModel(),
-              subType = it.subType,
-              externalId = it.externalId,
-              linkedTransaction =
-                  it.linkedTransaction?.let {
-                    Transaction(
-                        id = it.id,
-                        type = it.type,
-                        category = it.category?.toModel(),
-                        description = it.description,
-                        occurredOn = it.occurredOn,
-                        amount = it.amount,
-                        lastSyncedAt = it.lastSyncedOn,
-                        accountId = it.account.id,
-                        refunded = it.refunded,
-                        personalShare = it.personalShare,
-                        owedShare = it.owedShare,
-                        shareMetadata = it.shareMetadata)
-                  },
-              lastSyncedAt = it.lastSyncedOn,
-              refunded = it.refunded,
-              personalShare = it.personalShare,
-              owedShare = it.owedShare,
-              shareMetadata = it.shareMetadata)
-        }
+        .map { it.toModel() }
   }
 
   override fun findByAccountInAndOccurredOnBetween(
@@ -138,40 +84,7 @@ class TransactionAdapter(
             accounts = accounts.map { AccountEntity().apply { id = it.id!! } },
             startDate = startDate,
             endDate = endDate)
-        .map {
-          Transaction(
-              id = it.id,
-              type = it.type,
-              description = it.description,
-              occurredOn = it.occurredOn,
-              amount = it.amount,
-              accountId = it.account.id,
-              isDeleted = it.isDeleted,
-              category = it.category?.toModel(),
-              subType = it.subType,
-              externalId = it.externalId,
-              linkedTransaction =
-                  it.linkedTransaction?.let {
-                    Transaction(
-                        id = it.id,
-                        type = it.type,
-                        category = it.category?.toModel(),
-                        description = it.description,
-                        occurredOn = it.occurredOn,
-                        amount = it.amount,
-                        lastSyncedAt = it.lastSyncedOn,
-                        accountId = it.account.id,
-                        refunded = it.refunded,
-                        personalShare = it.personalShare,
-                        owedShare = it.owedShare,
-                        shareMetadata = it.shareMetadata)
-                  },
-              lastSyncedAt = it.lastSyncedOn,
-              refunded = it.refunded,
-              personalShare = it.personalShare,
-              owedShare = it.owedShare,
-              shareMetadata = it.shareMetadata)
-        }
+        .map { it.toModel() }
   }
 
   override fun getSavingsBetween(yearMonth: YearMonth, accounts: List<UUID>): Double {
@@ -182,27 +95,5 @@ class TransactionAdapter(
   override fun getIncomeBetween(yearMonth: YearMonth, accounts: List<UUID>): Double {
     return transactionRepository.getSIncomeTotalForMonth(
         yearMonth.year, yearMonth.month.value, accounts)
-  }
-
-  override fun getLastSyncTimeForAccount(account: UUID): LocalDate? {
-    return transactionRepository.findLastSyncDateForAccount(account)
-  }
-
-  override fun findByExternalId(externalId: String, accountId: UUID): Transaction? {
-    return transactionRepository.findByExternalIdAndAccountId(externalId, accountId)?.let {
-      Transaction(
-          id = it.id,
-          type = it.type,
-          description = it.description,
-          occurredOn = it.occurredOn,
-          amount = it.amount,
-          accountId = it.account.id,
-          category = it.category?.toModel(),
-          lastSyncedAt = it.lastSyncedOn,
-          refunded = it.refunded,
-          personalShare = it.personalShare,
-          owedShare = it.owedShare,
-          shareMetadata = it.shareMetadata)
-    }
   }
 }

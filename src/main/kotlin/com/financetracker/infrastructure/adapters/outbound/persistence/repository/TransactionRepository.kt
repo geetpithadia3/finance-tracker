@@ -4,12 +4,12 @@ import com.financetracker.domain.model.TransactionType
 import com.financetracker.infrastructure.adapters.outbound.persistence.entity.AccountEntity
 import com.financetracker.infrastructure.adapters.outbound.persistence.entity.TransactionEntity
 import com.financetracker.infrastructure.adapters.outbound.persistence.entity.UserEntity
+import java.time.LocalDate
+import java.util.*
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
-import java.time.LocalDate
-import java.util.*
 
 @Repository
 interface TransactionRepository : JpaRepository<TransactionEntity, UUID> {
@@ -66,8 +66,6 @@ interface TransactionRepository : JpaRepository<TransactionEntity, UUID> {
       accounts: List<UUID>
   ): Double
 
-  fun findByExternalIdAndAccountId(externalId: String, accountId: UUID): TransactionEntity?
-
   @Query("SELECT MAX(e.occurredOn) FROM TransactionEntity e where e.account.id IN ?1")
   fun findLastSyncDateForAccount(accountId: UUID): LocalDate?
 
@@ -87,7 +85,6 @@ interface TransactionRepository : JpaRepository<TransactionEntity, UUID> {
       @Param("month") month: Int,
       @Param("accountIds") accountIds: List<UUID>
   ): Double
-
 
   @Query(
       """

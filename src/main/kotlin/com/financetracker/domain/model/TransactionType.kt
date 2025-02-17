@@ -16,8 +16,3 @@ enum class TransactionType(val value: String) {
     }
   }
 }
-
-enum class TransactionSubType {
-  SHARED,
-  STANDARD
-}

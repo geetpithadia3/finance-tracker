@@ -1,7 +1,5 @@
 package com.financetracker.infrastructure.adapters.outbound.persistence.entity
 
-import com.financetracker.domain.model.Budget
-import com.financetracker.domain.model.CategoryBudget
 import jakarta.persistence.*
 import java.time.LocalDateTime
 import java.time.YearMonth
@@ -38,19 +36,4 @@ class CategoryBudgetEntity {
   lateinit var category: CategoryEntity
 
   @Column(nullable = false) var budgetAmount: Double = 0.0
-}
-
-// Extension functions to convert between domain and entity
-fun BudgetEntity.toModel(): Budget {
-  return Budget(
-      id = this.id,
-      userId = this.user.id,
-      yearMonth = this.yearMonth,
-      categoryLimits = this.categoryLimits.map { it.toModel() },
-      isActive = this.isActive)
-}
-
-fun CategoryBudgetEntity.toModel(): CategoryBudget {
-  return CategoryBudget(
-      id = this.id, categoryId = this.category.id, budgetAmount = this.budgetAmount)
 }

@@ -7,15 +7,14 @@ import com.financetracker.infrastructure.adapters.inbound.dto.response.AccountBa
 import com.financetracker.infrastructure.adapters.outbound.persistence.repository.UserRepository
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
-import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.annotation.*
 import java.util.*
 
 @RestController
 class AccountController(
     val accountManagementUseCase: AccountManagementUseCase,
-    val userRepository: UserRepository
-) {
+    userRepository: UserRepository
+) : BaseController(userRepository) {
   private val logger = LoggerFactory.getLogger(AccountController::class.java)
 
   @PostMapping("/account")
@@ -61,18 +60,5 @@ class AccountController(
       logger.error("Error deleting account $accountId for user: ${getCurrentUser().username}", e)
       throw e
     }
-  }
-
-  private fun getCurrentUser(): User {
-    val authentication = SecurityContextHolder.getContext().authentication
-    val username = authentication.name
-    val userEntity =
-        userRepository.findByUsername(username) ?: throw RuntimeException("User not found")
-    return User(
-        id = userEntity.id,
-        username = userEntity.username,
-        password = userEntity.password,
-        externalId = userEntity.externalId,
-        externalKey = userEntity.externalKey)
   }
 }

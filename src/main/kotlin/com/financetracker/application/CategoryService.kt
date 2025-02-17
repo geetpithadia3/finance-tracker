@@ -7,8 +7,8 @@ import com.financetracker.domain.model.User
 import com.financetracker.infrastructure.adapters.inbound.dto.request.CreateCategoryRequest
 import com.financetracker.infrastructure.adapters.inbound.dto.request.UpdateCategoryRequest
 import com.financetracker.infrastructure.adapters.inbound.dto.response.CategoryResponse
-import org.springframework.stereotype.Service
 import java.util.*
+import org.springframework.stereotype.Service
 
 @Service
 class CategoryService(private val categoryPersistence: CategoryPersistence) :
@@ -25,12 +25,6 @@ class CategoryService(private val categoryPersistence: CategoryPersistence) :
 
     val id = categoryPersistence.save(category)
     return CategoryResponse(id, category.name, category.isActive, category.isEditable)
-  }
-
-  override fun listEnabled(user: User): List<CategoryResponse> {
-    return categoryPersistence.findByUser(user).map {
-      CategoryResponse(it.id!!, it.name, it.isActive, it.isEditable)
-    }
   }
 
   override fun listAll(user: User): List<CategoryResponse> {

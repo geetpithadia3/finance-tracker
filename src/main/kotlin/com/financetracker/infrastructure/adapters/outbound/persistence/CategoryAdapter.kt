@@ -3,13 +3,13 @@ package com.financetracker.infrastructure.adapters.outbound.persistence
 import com.financetracker.application.ports.output.CategoryPersistence
 import com.financetracker.domain.model.Category
 import com.financetracker.domain.model.User
-import com.financetracker.domain.model.toEntity
 import com.financetracker.infrastructure.adapters.outbound.persistence.entity.UserEntity
-import com.financetracker.infrastructure.adapters.outbound.persistence.entity.toModel
 import com.financetracker.infrastructure.adapters.outbound.persistence.repository.CategoryRepository
-import org.springframework.stereotype.Service
+import com.financetracker.infrastructure.adapters.outbound.persistence.utils.toEntity
+import com.financetracker.infrastructure.adapters.outbound.persistence.utils.toModel
 import java.util.*
 import kotlin.jvm.optionals.getOrNull
+import org.springframework.stereotype.Service
 
 @Service
 class CategoryAdapter(private val categoryRepository: CategoryRepository) : CategoryPersistence {

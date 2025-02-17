@@ -16,7 +16,7 @@ import java.time.YearMonth
 class DashboardController(
     val dashboardManagementUseCase: DashboardManagementUseCase,
     private val userRepository: UserRepository
-) {
+): BaseController(userRepository) {
 
   @GetMapping("/dashboard")
   fun listDetails(
@@ -34,17 +34,5 @@ class DashboardController(
     val user = getCurrentUser()
     val targetYearMonth = yearMonth ?: YearMonth.now()
       return ResponseEntity.ok(dashboardManagementUseCase.getExpensesByCategory(targetYearMonth, user))
-  }
-
-  private fun getCurrentUser(): User {
-    val authentication = SecurityContextHolder.getContext().authentication
-    val username = authentication.name
-    val entity = userRepository.findByUsername(username) ?: throw RuntimeException("User not found")
-    return User(
-        id = entity.id,
-        username = entity.username,
-        password = entity.password,
-        externalId = entity.externalId,
-        externalKey = entity.externalKey)
   }
 }

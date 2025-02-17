@@ -1,16 +1,9 @@
 package com.financetracker.application
 
 import com.financetracker.application.ports.input.BudgetManagementUseCase
-import com.financetracker.application.ports.output.AccountPersistence
-import com.financetracker.application.ports.output.BudgetPersistence
-import com.financetracker.application.ports.output.CategoryPersistence
-import com.financetracker.application.ports.output.TransactionPersistence
-import com.financetracker.domain.model.Budget
-import com.financetracker.domain.model.CategoryBudget
-import com.financetracker.domain.model.TransactionType
-import com.financetracker.domain.model.User
-import com.financetracker.infrastructure.adapters.inbound.dto.request.CreateBudgetRequest
-import com.financetracker.infrastructure.adapters.inbound.dto.request.UpdateBudgetRequest
+import com.financetracker.application.ports.output.*
+import com.financetracker.domain.model.*
+import com.financetracker.infrastructure.adapters.inbound.dto.request.*
 import com.financetracker.infrastructure.adapters.inbound.dto.response.*
 import java.time.YearMonth
 import java.util.*
@@ -25,118 +18,172 @@ class BudgetService(
 ) : BudgetManagementUseCase {
 
   override fun createBudget(request: CreateBudgetRequest, user: User): BudgetResponse {
-    // Validate all categories exist
-    request.categoryLimits.forEach { categoryLimit ->
-      validateCategory(categoryLimit.categoryId, user)
-    }
-
-    val categoryLimits =
-        request.categoryLimits.map {
-          CategoryBudget(categoryId = it.categoryId, budgetAmount = it.budgetAmount)
-        }
-
+    validateBudgetableCategories(request.categoryLimits, user)
+    val categoryLimits = mapToCategoryBudgets(request.categoryLimits)
     val existingBudget = budgetPersistence.findByUserAndYearMonth(user, request.yearMonth)
 
     return if (existingBudget != null) {
-      val updatedBudget = existingBudget.copy(categoryLimits = categoryLimits)
-      val savedBudget = budgetPersistence.update(updatedBudget)
-      mapToBudgetResponse(savedBudget, user)
+      updateExistingBudget(existingBudget, categoryLimits, user)
     } else {
-      val budget =
-          Budget(userId = user.id!!, yearMonth = request.yearMonth, categoryLimits = categoryLimits)
-      val savedBudget = budgetPersistence.save(budget)
-      mapToBudgetResponse(savedBudget, user)
+      createNewBudget(request.yearMonth, categoryLimits, user)
     }
   }
 
   override fun getBudgetDetails(yearMonth: YearMonth, user: User): BudgetDetailsResponse {
-    val budget =
-        budgetPersistence.findByUserAndYearMonth(user, yearMonth)
-            ?: budgetPersistence.findLatestBeforeYearMonth(user, yearMonth)
-
-    if (budget == null) {
-      return BudgetDetailsResponse(
-          id = UUID.randomUUID(), // Generate temporary ID for response
-          yearMonth = yearMonth,
-          categories = emptyList())
+    val budget = findBudget(user, yearMonth)
+    return if (budget == null) {
+      createEmptyBudgetDetailsResponse(yearMonth)
+    } else {
+      createBudgetDetailsResponse(budget, user, yearMonth)
     }
+  }
 
-    val startDate = yearMonth.atDay(1)
-    val endDate = yearMonth.atEndOfMonth()
-    val accounts = accountPersistence.findByUser(user)
+  override fun getBudgetableCategories(user: User): List<CategoryResponse> {
+    val excludedCategories = setOf(CategoryName.TRANSFER.name, CategoryName.INCOME.name)
+    return categoryPersistence
+        .findByUser(user)
+        .filter { it.isActive && !excludedCategories.contains(it.name) }
+        .map { mapToCategoryResponse(it) }
+  }
 
-    val excludedCategories = setOf("Transfer")
-    val excludedCategoryIds =
-        categoryPersistence
-            .findByUser(user)
-            .filter { it.name in excludedCategories }
-            .mapNotNull { it.id }
-            .toSet()
+  private fun validateBudgetableCategories(
+      categoryLimits: List<CategoryBudgetRequest>,
+      user: User
+  ) {
+    categoryLimits.forEach { validateCategory(it.categoryId, user) }
+  }
 
-    val debitTransactions =
-        transactionPersistence
-            .findByAccountInAndTypeAndIsDeletedAndOccurredOnBetween(
-                accounts, TransactionType.DEBIT, false, startDate, endDate)
-            .filter { transaction -> transaction.category?.id !in excludedCategoryIds }
+  private fun validateCategory(categoryId: UUID, user: User) {
+    val category =
+        categoryPersistence.findByIdAndUser(categoryId, user)
+            ?: throw IllegalArgumentException("Category not found: $categoryId")
 
-    val creditTransactions =
-        transactionPersistence
-            .findByAccountInAndTypeAndIsDeletedAndOccurredOnBetween(
-                accounts, TransactionType.CREDIT, false, startDate, endDate)
-            .filter { transaction -> transaction.category?.id !in excludedCategoryIds }
+    if (category.name in setOf(CategoryName.TRANSFER.name, CategoryName.INCOME.name)) {
+      throw IllegalArgumentException("Cannot manually set budget for ${category.name} category")
+    }
+  }
 
-    val transactions = debitTransactions + creditTransactions
-    val categoryExpenses =
-        transactions
-            .groupBy { it.category?.id }
-            .mapValues { it.value.sumOf { transaction -> transaction.amount } }
+  private fun mapToCategoryBudgets(
+      categoryLimits: List<CategoryBudgetRequest>
+  ): List<CategoryBudget> {
+    return categoryLimits.map { CategoryBudget(null, it.categoryId, it.budgetAmount) }
+  }
 
-    val filteredCategoryLimits =
-        budget.categoryLimits.filter { categoryBudget ->
-          val category = categoryPersistence.findByIdAndUser(categoryBudget.categoryId, user)
-          category != null && category.name !in excludedCategories
-        }
+  private fun updateExistingBudget(
+      existingBudget: Budget,
+      categoryLimits: List<CategoryBudget>,
+      user: User
+  ): BudgetResponse {
+    val updatedBudget = existingBudget.copy(categoryLimits = categoryLimits)
+    val savedBudget = budgetPersistence.update(updatedBudget)
+    return mapToBudgetResponse(savedBudget, user)
+  }
+
+  /*
+   * Create a new budget for the given yearMonth and category limits.
+   */
+  private fun createNewBudget(
+      yearMonth: YearMonth,
+      categoryLimits: List<CategoryBudget>,
+      user: User
+  ): BudgetResponse {
+    val budget = Budget(userId = user.id!!, yearMonth = yearMonth, categoryLimits = categoryLimits)
+    val savedBudget = budgetPersistence.save(budget)
+    return mapToBudgetResponse(savedBudget, user)
+  }
+
+  /*
+   * Find the budget for the given user and yearMonth. If a budget for the exact yearMonth
+   * does not exist, find the latest budget before the given yearMonth.
+   */
+  private fun findBudget(user: User, yearMonth: YearMonth): Budget? {
+    return budgetPersistence.findByUserAndYearMonth(user, yearMonth)
+        ?: budgetPersistence.findLatestBeforeYearMonth(user, yearMonth)
+  }
+
+  private fun createEmptyBudgetDetailsResponse(yearMonth: YearMonth): BudgetDetailsResponse {
+    return BudgetDetailsResponse(
+        id = UUID.randomUUID(), yearMonth = yearMonth, categories = emptyList())
+  }
+
+  private fun createBudgetDetailsResponse(
+      budget: Budget,
+      user: User,
+      yearMonth: YearMonth
+  ): BudgetDetailsResponse {
+    val transactions = findTransactions(user, yearMonth)
+    val categoryExpenses = calculateCategoryExpenses(transactions)
+    val filteredCategoryLimits = filterCategoryLimits(budget.categoryLimits, user)
 
     return BudgetDetailsResponse(
         id = budget.id!!,
         yearMonth = yearMonth,
         categories =
-            filteredCategoryLimits.map { categoryBudget ->
-              val spent = categoryExpenses[categoryBudget.categoryId] ?: 0.0
-
-              CategoryBudgetDetailsResponse(
-                  categoryId = categoryBudget.categoryId,
-                  categoryName =
-                      categoryPersistence.findByIdAndUser(categoryBudget.categoryId, user)?.name
-                          ?: throw RuntimeException("Category not found"),
-                  limit = categoryBudget.budgetAmount,
-                  spent = spent)
-            })
+            mapToCategoryBudgetDetailsResponses(filteredCategoryLimits, categoryExpenses, user))
   }
 
-  override fun updateBudget(id: UUID, request: UpdateBudgetRequest, user: User): BudgetResponse {
-    val existingBudget =
-        budgetPersistence.findByUserAndYearMonth(user, request.yearMonth)
-            ?: throw NoSuchElementException("Budget not found")
+  private fun findTransactions(user: User, yearMonth: YearMonth): List<Transaction> {
+    val startDate = yearMonth.atDay(1)
+    val endDate = yearMonth.atEndOfMonth()
+    val accounts = accountPersistence.findByUser(user)
+    val excludedCategoryIds = findExcludedCategoryIds(user)
 
-    if (existingBudget.id != id) {
-      throw IllegalArgumentException("Budget ID mismatch")
+    val debitTransactions =
+        transactionPersistence
+            .findByAccountInAndTypeAndIsDeletedAndOccurredOnBetween(
+                accounts, TransactionType.DEBIT, false, startDate, endDate)
+            .filter { it.category?.id !in excludedCategoryIds }
+
+    val creditTransactions =
+        transactionPersistence
+            .findByAccountInAndTypeAndIsDeletedAndOccurredOnBetween(
+                accounts, TransactionType.CREDIT, false, startDate, endDate)
+            .filter { it.category?.id !in excludedCategoryIds }
+
+    return debitTransactions + creditTransactions
+  }
+
+  private fun findExcludedCategoryIds(user: User): Set<UUID> {
+    val excludedCategories = setOf("Transfer")
+    return categoryPersistence
+        .findByUser(user)
+        .filter { it.name in excludedCategories }
+        .mapNotNull { it.id }
+        .toSet()
+  }
+
+  private fun calculateCategoryExpenses(transactions: List<Transaction>): Map<UUID?, Double> {
+    return transactions
+        .groupBy { it.category?.id }
+        .mapValues { it.value.sumOf { transaction -> transaction.amount } }
+  }
+
+  private fun filterCategoryLimits(
+      categoryLimits: List<CategoryBudget>,
+      user: User
+  ): List<CategoryBudget> {
+    val excludedCategories = setOf("Transfer")
+    return categoryLimits.filter { categoryBudget ->
+      val category = categoryPersistence.findByIdAndUser(categoryBudget.categoryId, user)
+      category != null && category.name !in excludedCategories
     }
+  }
 
-    // Validate all categories exist
-    request.categoryLimits.forEach { categoryLimit ->
-      validateCategory(categoryLimit.categoryId, user)
+  private fun mapToCategoryBudgetDetailsResponses(
+      categoryLimits: List<CategoryBudget>,
+      categoryExpenses: Map<UUID?, Double>,
+      user: User
+  ): List<CategoryBudgetDetailsResponse> {
+    return categoryLimits.map { categoryBudget ->
+      val spent = categoryExpenses[categoryBudget.categoryId] ?: 0.0
+      CategoryBudgetDetailsResponse(
+          categoryId = categoryBudget.categoryId,
+          categoryName =
+              categoryPersistence.findByIdAndUser(categoryBudget.categoryId, user)?.name
+                  ?: throw RuntimeException("Category not found"),
+          limit = categoryBudget.budgetAmount,
+          spent = spent)
     }
-
-    val categoryLimits =
-        request.categoryLimits.map {
-          CategoryBudget(categoryId = it.categoryId, budgetAmount = it.budgetAmount)
-        }
-
-    val updatedBudget = existingBudget.copy(categoryLimits = categoryLimits)
-
-    val savedBudget = budgetPersistence.update(updatedBudget)
-    return mapToBudgetResponse(savedBudget, user)
   }
 
   private fun mapToBudgetResponse(budget: Budget, user: User): BudgetResponse {
@@ -154,28 +201,11 @@ class BudgetService(
             })
   }
 
-  private fun validateCategory(categoryId: UUID, user: User) {
-    val category =
-        categoryPersistence.findByIdAndUser(categoryId, user)
-            ?: throw IllegalArgumentException("Category not found: $categoryId")
-
-    //    if (category.name == "Transfer" || category.name == "Income") {
-    //      throw IllegalArgumentException("Cannot manually set budget for ${category.name}
-    // category")
-    //    }
-  }
-
-  override fun getBudgetableCategories(user: User): List<CategoryResponse> {
-    val excludedCategories = setOf("Transfer", "Income")
-    return categoryPersistence
-        .findByUser(user)
-        .filter { category -> category.isActive && !excludedCategories.contains(category.name) }
-        .map { category ->
-          CategoryResponse(
-              id = category.id!!,
-              name = category.name,
-              isActive = category.isActive,
-              isEditable = category.isEditable)
-        }
+  private fun mapToCategoryResponse(category: Category): CategoryResponse {
+    return CategoryResponse(
+        id = category.id!!,
+        name = category.name,
+        isActive = category.isActive,
+        isEditable = category.isEditable)
   }
 }

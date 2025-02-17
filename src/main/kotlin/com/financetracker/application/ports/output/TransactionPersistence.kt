@@ -30,8 +30,4 @@ interface TransactionPersistence {
   fun getSavingsBetween(yearMonth: YearMonth, accounts: List<UUID>): Double
 
   fun getIncomeBetween(yearMonth: YearMonth, accounts: List<UUID>): Double
-
-  fun getLastSyncTimeForAccount(account: UUID): LocalDate?
-
-  fun findByExternalId(externalId: String, accountId: UUID): Transaction?
 }

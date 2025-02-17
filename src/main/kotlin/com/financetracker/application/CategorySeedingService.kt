@@ -15,13 +15,7 @@ class CategorySeedingService(
   fun seedDefaultCategories(user: UUID) {
     val defaultCategories =
         CategoryName.entries.map { categoryName ->
-          Category(
-              name = categoryName.value,
-              isEditable =
-                  categoryName != CategoryName.INCOME &&
-                      categoryName != CategoryName.SAVINGS &&
-                      categoryName != CategoryName.INVESTMENTS,
-              userId = user)
+          Category(name = categoryName.value, isEditable = categoryName.isEditable(), userId = user)
         }
 
     defaultCategories.forEach { category -> categoryPersistence.save(category) }
@@ -39,11 +33,14 @@ enum class CategoryName(val value: String) {
   TRAVEL("Travel"),
   INCOME("Income"),
   SAVINGS("Savings"),
-  INVESTMENTS("Investments"),
   GENERAL("General"),
   CAR("Car"),
   RESTAURANT("Restaurant"),
   RENT("Rent"),
   PHONE("Phone"),
-  TRANSFER("Transfer")
+  TRANSFER("Transfer");
+
+  fun isEditable(): Boolean {
+    return this != INCOME && this != SAVINGS && this != TRANSFER
+  }
 }

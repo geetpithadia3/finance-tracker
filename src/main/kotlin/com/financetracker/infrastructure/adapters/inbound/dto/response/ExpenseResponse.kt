@@ -10,6 +10,6 @@ data class ExpenseResponse(
     val description: String,
     var amount: Double = 0.0,
     val occurredOn: LocalDate,
-    val shareable: Boolean,
+    val personalShare: Double = amount,
     val account: UUID
 )

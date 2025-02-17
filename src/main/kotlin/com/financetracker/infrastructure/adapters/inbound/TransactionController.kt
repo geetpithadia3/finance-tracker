@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController
 class TransactionController(
     val transactionManagementUseCase: TransactionManagementUseCase,
     val userRepository: UserRepository
-) {
+): BaseController(userRepository) {
   private val logger = LoggerFactory.getLogger(TransactionController::class.java)
 
   @PostMapping("/transactions")
@@ -70,17 +70,5 @@ class TransactionController(
           "Error fetching expenses for user: ${user.username}, month: ${request.yearMonth}", e)
       throw e
     }
-  }
-
-  private fun getCurrentUser(): User {
-    val authentication = SecurityContextHolder.getContext().authentication
-    val username = authentication.name
-    val entity = userRepository.findByUsername(username) ?: throw RuntimeException("User not found")
-    return User(
-        id = entity.id,
-        username = entity.username,
-        password = entity.password,
-        externalId = entity.externalId,
-        externalKey = entity.externalKey)
   }
 }

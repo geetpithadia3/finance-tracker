@@ -3,15 +3,15 @@ package com.financetracker.infrastructure.adapters.outbound.persistence
 import com.financetracker.application.ports.output.BudgetPersistence
 import com.financetracker.domain.model.Budget
 import com.financetracker.domain.model.User
-import com.financetracker.infrastructure.adapters.outbound.persistence.entity.BudgetEntity
 import com.financetracker.infrastructure.adapters.outbound.persistence.entity.CategoryBudgetEntity
 import com.financetracker.infrastructure.adapters.outbound.persistence.entity.UserEntity
-import com.financetracker.infrastructure.adapters.outbound.persistence.entity.toModel
 import com.financetracker.infrastructure.adapters.outbound.persistence.repository.BudgetRepository
 import com.financetracker.infrastructure.adapters.outbound.persistence.repository.CategoryRepository
-import org.springframework.stereotype.Repository
+import com.financetracker.infrastructure.adapters.outbound.persistence.utils.toEntity
+import com.financetracker.infrastructure.adapters.outbound.persistence.utils.toModel
 import java.time.LocalDateTime
 import java.time.YearMonth
+import org.springframework.stereotype.Repository
 
 @Repository
 class BudgetAdapter(
@@ -20,14 +20,7 @@ class BudgetAdapter(
 ) : BudgetPersistence {
 
   override fun save(budget: Budget): Budget {
-    val userEntity = UserEntity().apply { id = budget.userId }
-
-    val budgetEntity =
-        BudgetEntity().apply {
-          user = userEntity
-          yearMonth = budget.yearMonth
-          isActive = budget.isActive
-        }
+    val budgetEntity = budget.toEntity()
 
     budget.categoryLimits.forEach { categoryBudget ->
       val categoryEntity = categoryRepository.getReferenceById(categoryBudget.categoryId)

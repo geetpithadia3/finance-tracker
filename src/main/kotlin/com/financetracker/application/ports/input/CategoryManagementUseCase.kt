@@ -10,8 +10,6 @@ interface CategoryManagementUseCase {
 
   fun create(request: CreateCategoryRequest, user: User): CategoryResponse
 
-  fun listEnabled(user: User): List<CategoryResponse>
-
   fun listAll(user: User): List<CategoryResponse>
 
   fun update(id: UUID, request: UpdateCategoryRequest, user: User): CategoryResponse
