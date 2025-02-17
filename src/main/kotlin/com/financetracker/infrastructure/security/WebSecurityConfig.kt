@@ -27,7 +27,7 @@ class WebSecurityConfig(private val jwtRequestFilter: JwtRequestFilter) {
             configuration.allowedOrigins = listOf("*")
             configuration.allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS")
             configuration.allowedHeaders =
-                listOf("Authorization", "Content-Type", "Origin", "Accept")
+                listOf("*")
             configuration.allowCredentials = false
             configuration
           }
