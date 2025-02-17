@@ -5,11 +5,17 @@ import jakarta.persistence.*
 import java.util.*
 
 @Entity
-@Table(name = "categories")
+@Table(
+    name = "categories",
+    uniqueConstraints = [
+        UniqueConstraint(columnNames = ["name", "user_id"])
+    ]
+)
 class CategoryEntity {
   @Id @GeneratedValue(strategy = GenerationType.UUID) lateinit var id: UUID
 
-  @Column(unique = true) lateinit var name: String
+  @Column(nullable = false)
+  lateinit var name: String
 
   var isActive: Boolean = true
 
