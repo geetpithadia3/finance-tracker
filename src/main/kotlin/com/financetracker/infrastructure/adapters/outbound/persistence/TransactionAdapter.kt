@@ -30,7 +30,9 @@ class TransactionAdapter(
           }
         }
 
-    return transactionRepository.save(transaction.toEntity(categoryEntity)).id
+    val transactionEntity = transaction.toEntity(categoryEntity)
+    transactionEntity.apply { personalShare = amount }
+    return transactionRepository.save(transactionEntity).id
   }
 
   override fun update(transaction: Transaction): UUID {

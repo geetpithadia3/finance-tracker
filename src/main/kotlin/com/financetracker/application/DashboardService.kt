@@ -10,9 +10,9 @@ import com.financetracker.domain.model.TransactionType
 import com.financetracker.domain.model.User
 import com.financetracker.infrastructure.adapters.inbound.dto.response.DashboardDetailsResponse
 import com.financetracker.infrastructure.adapters.inbound.dto.response.ExpenseResponse
+import org.springframework.stereotype.Service
 import java.time.LocalDate
 import java.time.YearMonth
-import org.springframework.stereotype.Service
 
 @Service
 class DashboardService(
@@ -25,18 +25,23 @@ class DashboardService(
     val (startDate, endDate) = getStartAndEndDate(yearMonth)
     val accounts = accountPersistence.findByUser(user)
 
-    val savingsCategory = categoryPersistence.findByNameAndUser(CategoryName.SAVINGS.name, user)
-    val incomeCategory = categoryPersistence.findByNameAndUser(CategoryName.INCOME.name, user)
-    val transferCategory = categoryPersistence.findByNameAndUser(CategoryName.TRANSFER.name, user)
+    val savingsCategory = categoryPersistence.findByNameAndUser(CategoryName.SAVINGS.value, user)
+    val incomeCategory = categoryPersistence.findByNameAndUser(CategoryName.INCOME.value, user)
+    val transferCategory = categoryPersistence.findByNameAndUser(CategoryName.TRANSFER.value, user)
 
     val transactions =
         transactionPersistence.findByAccountInAndOccurredOnBetween(accounts, startDate, endDate)
 
     val expenses =
         filterAndMapTransactions(
-            transactions, TransactionType.DEBIT, savingsCategory, incomeCategory, transferCategory)
-    val income = filterAndMapTransactions(transactions, TransactionType.CREDIT, incomeCategory)
-    val savings = filterAndMapTransactions(transactions, TransactionType.DEBIT, savingsCategory)
+            transactions,
+            TransactionType.DEBIT,
+            listOf(),
+            listOf(savingsCategory, incomeCategory, transferCategory))
+    val income =
+        filterAndMapTransactions(transactions, TransactionType.CREDIT, listOf(incomeCategory))
+    val savings =
+        filterAndMapTransactions(transactions, TransactionType.DEBIT, listOf(savingsCategory))
 
     return DashboardDetailsResponse(savings = savings, expenses = expenses, income = income)
   }
@@ -45,8 +50,8 @@ class DashboardService(
     val (startDate, endDate) = getStartAndEndDate(yearMonth)
     val accounts = accountPersistence.findByUser(user)
 
-    val savingsCategory = categoryPersistence.findByNameAndUser(CategoryName.SAVINGS.name, user)
-    val transferCategory = categoryPersistence.findByNameAndUser(CategoryName.TRANSFER.name, user)
+    val savingsCategory = categoryPersistence.findByNameAndUser(CategoryName.SAVINGS.value, user)
+    val transferCategory = categoryPersistence.findByNameAndUser(CategoryName.TRANSFER.value, user)
 
     val expenses =
         transactionPersistence
@@ -70,13 +75,16 @@ class DashboardService(
   private fun filterAndMapTransactions(
       transactions: List<Transaction>,
       type: TransactionType,
-      vararg excludedCategories: Category?
+      filterCategories: List<Category?> = emptyList(),
+      excludeCategories: List<Category?> = emptyList()
   ): List<ExpenseResponse> {
     return transactions
         .filter {
           it.type == type &&
               !it.isDeleted &&
-              !excludedCategories.contains(it.category) &&
+              (filterCategories.isEmpty() ||
+                  it.category?.id in filterCategories.map { category -> category?.id }) &&
+              excludeCategories.none { category -> category?.id == it.category?.id } &&
               it.refunded.not()
         }
         .map {

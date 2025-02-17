@@ -155,7 +155,7 @@ class BudgetService(
   private fun calculateCategoryExpenses(transactions: List<Transaction>): Map<UUID?, Double> {
     return transactions
         .groupBy { it.category?.id }
-        .mapValues { it.value.sumOf { transaction -> transaction.amount } }
+        .mapValues { it.value.sumOf { transaction -> transaction.personalShare } }
   }
 
   private fun filterCategoryLimits(
