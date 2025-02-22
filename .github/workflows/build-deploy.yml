@@ -42,36 +42,35 @@ jobs:
       - name: Push Docker image to GHCR
         run: |
           docker push ${{ steps.build_image.outputs.image }}
-
-
   deploy:
     needs: build
     runs-on: ubuntu-latest
     environment: Prod
-    
+        
     steps:
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
-      
-      - name: Login to GitHub Container Registry
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
-      
-      - name: Deploy to EC2
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            # Login to GHCR
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
+        
+    - name: Login to GitHub Container Registry
+      run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+        
+    - name: Deploy to EC2
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USERNAME }}
+        key: ${{ secrets.EC2_SSH_KEY }}
+        script: |
+          # Login to GHCR
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
             
-            # Create environment file
-            cat > .env << EOF
+            # Create or update environment file
+            ENV_FILE="/opt/app/.env"
+            cat > $ENV_FILE << EOF
             JWT_SECRET=${{ secrets.JWT_SECRET }}
             DB_HOST=${{ vars.DB_HOST }}
             DB_PORT=${{ vars.DB_PORT }}
@@ -80,17 +79,15 @@ jobs:
             DB_PASSWORD=${{ secrets.DB_PASSWORD }}
             EOF
 
-            echo "Environment file created"
-            echo DB_HOST=${{ vars.DB_HOST }}
-            echo DB_PORT=${{ vars.DB_PORT }}
-            
+            echo "Environment file updated at $ENV_FILE"
+
             # Pull the new image
             IMAGE_NAME="ghcr.io/${{ github.repository }}:latest"
             docker pull $IMAGE_NAME
             
             # Define container name
             CONTAINER_NAME="tracker"
-            
+
             # Stop and remove the existing container if it exists
             if docker ps -a | grep -q $CONTAINER_NAME; then
               echo "Stopping existing container..."
@@ -102,12 +99,14 @@ jobs:
             fi
             
             echo "Starting new container..."
-            # Run the new container
+            # Run the new container (without exposing ports)
             docker run -d \
               --name $CONTAINER_NAME \
-              -p 8080:8080 \
-              --env-file .env \
+              --env-file $ENV_FILE \
               --restart unless-stopped \
               $IMAGE_NAME
             
             echo "Container started successfully"
+
+            # Restart Nginx to apply changes
+            sudo systemctl restart nginx
