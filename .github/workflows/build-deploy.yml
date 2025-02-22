@@ -69,7 +69,7 @@ jobs:
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
             
             # Create or update environment file
-            ENV_FILE="/opt/app/.env"
+            ENV_FILE=".env"
             cat > $ENV_FILE << EOF
             JWT_SECRET=${{ secrets.JWT_SECRET }}
             DB_HOST=${{ vars.DB_HOST }}
