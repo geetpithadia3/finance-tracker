@@ -23,6 +23,7 @@ class ExpenseService(
 
     val savingsCategory = categoryPersistence.findByNameAndUser("Savings", user)
     val transferCategory = categoryPersistence.findByNameAndUser("Transfer", user)
+    val creditCardPaymentCategory = categoryPersistence.findByNameAndUser("Credit Card Payment", user)
 
     val expenses =
         transactionPersistence.findByAccountInAndTypeAndIsDeletedAndOccurredOnBetween(
@@ -30,7 +31,9 @@ class ExpenseService(
 
     return expenses
         .filter {
-          (it.category?.id != savingsCategory?.id) && (it.category?.id != transferCategory?.id)
+          (it.category?.id != savingsCategory?.id) && 
+          (it.category?.id != transferCategory?.id) &&
+          (it.category?.id != creditCardPaymentCategory?.id)
         }
         .map {
           ExpenseResponse(

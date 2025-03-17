@@ -28,6 +28,7 @@ class DashboardService(
     val savingsCategory = categoryPersistence.findByNameAndUser(CategoryName.SAVINGS.value, user)
     val incomeCategory = categoryPersistence.findByNameAndUser(CategoryName.INCOME.value, user)
     val transferCategory = categoryPersistence.findByNameAndUser(CategoryName.TRANSFER.value, user)
+    val creditCardPaymentCategory = categoryPersistence.findByNameAndUser(CategoryName.CREDIT_CARD_PAYMENT.value, user)
 
     val transactions =
         transactionPersistence.findByAccountInAndOccurredOnBetween(accounts, startDate, endDate)
@@ -37,7 +38,7 @@ class DashboardService(
             transactions,
             TransactionType.DEBIT,
             listOf(),
-            listOf(savingsCategory, incomeCategory, transferCategory))
+            listOf(savingsCategory, incomeCategory, transferCategory, creditCardPaymentCategory))
     val income =
         filterAndMapTransactions(transactions, TransactionType.CREDIT, listOf(incomeCategory))
     val savings =
@@ -52,13 +53,16 @@ class DashboardService(
 
     val savingsCategory = categoryPersistence.findByNameAndUser(CategoryName.SAVINGS.value, user)
     val transferCategory = categoryPersistence.findByNameAndUser(CategoryName.TRANSFER.value, user)
+    val creditCardPaymentCategory = categoryPersistence.findByNameAndUser(CategoryName.CREDIT_CARD_PAYMENT.value, user)
 
     val expenses =
         transactionPersistence
             .findByAccountInAndTypeAndIsDeletedAndOccurredOnBetween(
                 accounts, TransactionType.DEBIT, false, startDate, endDate)
             .filter {
-              it.category?.id != savingsCategory?.id && it.category?.id != transferCategory?.id
+              it.category?.id != savingsCategory?.id && 
+              it.category?.id != transferCategory?.id &&
+              it.category?.id != creditCardPaymentCategory?.id
             }
 
     return expenses

@@ -1,5 +1,6 @@
 package com.financetracker.application
 
+import com.financetracker.application.ports.input.RecurringTransactionManagementUseCase
 import com.financetracker.application.ports.input.TransactionManagementUseCase
 import com.financetracker.application.ports.output.AccountPersistence
 import com.financetracker.application.ports.output.CategoryPersistence
@@ -10,6 +11,7 @@ import com.financetracker.domain.model.User
 import com.financetracker.infrastructure.adapters.inbound.dto.request.AddTransactionRequest
 import com.financetracker.infrastructure.adapters.inbound.dto.request.ListTransactionsByMonthRequest
 import com.financetracker.infrastructure.adapters.inbound.dto.request.UpdateTransactionRequest
+import com.financetracker.infrastructure.adapters.inbound.dto.response.RecurrenceResponse
 import com.financetracker.infrastructure.adapters.inbound.dto.response.TransactionResponse
 import jakarta.transaction.Transactional
 import kotlin.math.abs
@@ -20,6 +22,7 @@ class TransactionService(
     val transactionPersistence: TransactionPersistence,
     val accountPersistence: AccountPersistence,
     val categoryPersistence: CategoryPersistence,
+    val recurringTransactionManagementUseCase: RecurringTransactionManagementUseCase
 ) : TransactionManagementUseCase {
 
   @Transactional
@@ -71,7 +74,16 @@ class TransactionService(
               owedShare = transactionRequest.owedShare,
               shareMetadata = transactionRequest.shareMetadata)
 
-      transactionPersistence.update(transaction)
+      // Update the transaction first
+      val updatedTransactionId = transactionPersistence.update(transaction)
+
+      // If there's a recurrence request, handle it separately
+      if (transactionRequest.recurrence != null) {
+        recurringTransactionManagementUseCase.createOrUpdateFromTransaction(
+            transactionId = updatedTransactionId,
+            recurrenceRequest = transactionRequest.recurrence,
+            user = user)
+      }
     }
   }
 
@@ -82,24 +94,48 @@ class TransactionService(
     val startDate = request.yearMonth.atDay(1)
     val endDate = request.yearMonth.atEndOfMonth()
     val accounts = accountPersistence.findByUser(user)
-    val expenses =
+    val transactions =
         transactionPersistence.findByAccountInAndOccurredOnBetween(accounts, startDate, endDate)
 
-    return expenses
+    // Get all recurring transactions for these accounts
+    val recurringTransactions =
+        recurringTransactionManagementUseCase.findByAccountsAndActive(user).associateBy {
+          it.lastMatchedTransactionId
+        }
+
+    return transactions
         .filter { !it.isDeleted }
-        .map {
+        .map { transaction ->
+          val recurringTransaction = transaction.id?.let { recurringTransactions[it] }
+
           TransactionResponse(
-              id = it.id!!,
-              type = it.type!!.value,
-              category = it.category!!,
-              description = it.description!!,
-              amount = it.amount,
-              occurredOn = it.occurredOn!!,
-              account = it.accountId,
-              refunded = it.refunded,
-              personalShare = it.personalShare,
-              owedShare = it.owedShare,
-              shareMetadata = it.shareMetadata)
+              id = transaction.id!!,
+              type = transaction.type!!.value,
+              category = transaction.category!!,
+              description = transaction.description!!,
+              amount = transaction.amount,
+              occurredOn = transaction.occurredOn!!,
+              account = transaction.accountId,
+              refunded = transaction.refunded,
+              personalShare = transaction.personalShare,
+              owedShare = transaction.owedShare,
+              shareMetadata = transaction.shareMetadata,
+              recurrence =
+                  recurringTransaction?.let {
+                    RecurrenceResponse(
+                        id = it.id,
+                        frequency = it.frequency,
+                        startDate = it.startDate,
+                        endDate = it.endDate,
+                        dateFlexibility = it.dateFlexibility,
+                        rangeStart = it.rangeStart,
+                        rangeEnd = it.rangeEnd,
+                        preference = it.preference,
+                        priority = it.priority,
+                        isVariableAmount = it.isVariableAmount,
+                        estimatedMinAmount = it.estimatedMinAmount,
+                        estimatedMaxAmount = it.estimatedMaxAmount)
+                  })
         }
   }
 }

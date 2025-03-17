@@ -49,7 +49,14 @@ dependencies {
   compileOnly("org.projectlombok:lombok:1.18.30")
 
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
-   implementation("org.springframework.boot:spring-boot-starter-actuator")
+  implementation("org.springframework.boot:spring-boot-starter-actuator")
+
+  // PDF Generation
+  implementation("com.itextpdf:itext7-core:7.2.5")
+  
+  // Excel Generation
+  implementation("org.apache.poi:poi:5.2.3")
+  implementation("org.apache.poi:poi-ooxml:5.2.3")
 }
 
 tasks.withType<KotlinCompile> {

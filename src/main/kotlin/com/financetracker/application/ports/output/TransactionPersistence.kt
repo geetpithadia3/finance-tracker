@@ -12,6 +12,8 @@ interface TransactionPersistence {
   fun save(transaction: Transaction): UUID
 
   fun update(transaction: Transaction): UUID
+  
+  fun findById(id: UUID): Transaction?
 
   fun findByAccountInAndTypeAndIsDeletedAndOccurredOnBetween(
       accounts: List<Account>,

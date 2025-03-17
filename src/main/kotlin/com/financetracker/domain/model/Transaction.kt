@@ -16,5 +16,5 @@ data class Transaction(
     val refunded: Boolean = false,
     val personalShare: Double = 0.0,
     val owedShare: Double = 0.0,
-    val shareMetadata: String? = null
+    val shareMetadata: String? = null,
 )

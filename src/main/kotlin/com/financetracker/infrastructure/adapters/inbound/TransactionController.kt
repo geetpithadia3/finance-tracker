@@ -1,25 +1,21 @@
 package com.financetracker.infrastructure.adapters.inbound
 
 import com.financetracker.application.ports.input.TransactionManagementUseCase
-import com.financetracker.domain.model.User
 import com.financetracker.infrastructure.adapters.inbound.dto.request.AddTransactionRequest
 import com.financetracker.infrastructure.adapters.inbound.dto.request.ListTransactionsByMonthRequest
 import com.financetracker.infrastructure.adapters.inbound.dto.request.UpdateTransactionRequest
 import com.financetracker.infrastructure.adapters.inbound.dto.response.TransactionResponse
 import com.financetracker.infrastructure.adapters.outbound.persistence.repository.UserRepository
+import java.util.*
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
-import org.springframework.security.core.context.SecurityContextHolder
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.PutMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
 @RestController
 class TransactionController(
     val transactionManagementUseCase: TransactionManagementUseCase,
-    val userRepository: UserRepository
-): BaseController(userRepository) {
+    val userRepository: UserRepository,
+) : BaseController(userRepository) {
   private val logger = LoggerFactory.getLogger(TransactionController::class.java)
 
   @PostMapping("/transactions")

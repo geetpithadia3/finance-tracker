@@ -1,10 +1,20 @@
 package com.financetracker.application
 
 import com.financetracker.application.ports.input.BudgetManagementUseCase
-import com.financetracker.application.ports.output.*
+import com.financetracker.application.ports.output.AccountPersistence
+import com.financetracker.application.ports.output.BudgetPersistence
+import com.financetracker.application.ports.output.CategoryPersistence
+import com.financetracker.application.ports.output.TransactionPersistence
 import com.financetracker.domain.model.*
-import com.financetracker.infrastructure.adapters.inbound.dto.request.*
+import com.financetracker.infrastructure.adapters.inbound.dto.request.CategoryBudgetRequest
+import com.financetracker.infrastructure.adapters.inbound.dto.request.CreateBudgetRequest
 import com.financetracker.infrastructure.adapters.inbound.dto.response.*
+import com.itextpdf.kernel.pdf.PdfDocument
+import com.itextpdf.kernel.pdf.PdfWriter
+import com.itextpdf.layout.Document
+import com.itextpdf.layout.element.Paragraph
+import com.itextpdf.layout.element.Table
+import java.io.ByteArrayOutputStream
 import java.time.YearMonth
 import java.util.*
 import org.springframework.stereotype.Service
@@ -39,11 +49,167 @@ class BudgetService(
   }
 
   override fun getBudgetableCategories(user: User): List<CategoryResponse> {
-    val excludedCategories = setOf(CategoryName.TRANSFER.name, CategoryName.INCOME.name)
+    val excludedCategories = setOf(
+        CategoryName.TRANSFER.name, 
+        CategoryName.INCOME.name,
+        CategoryName.CREDIT_CARD_PAYMENT.name
+    )
     return categoryPersistence
         .findByUser(user)
         .filter { it.isActive && !excludedCategories.contains(it.name) }
         .map { mapToCategoryResponse(it) }
+  }
+
+  override fun generateMonthlyReport(
+      yearMonth: YearMonth,
+      user: User,
+      format: ReportFormat
+  ): ByteArray {
+    val budgetDetails = getBudgetDetails(yearMonth, user)
+    val accounts = accountPersistence.findByUser(user)
+    val startDate = yearMonth.atDay(1)
+    val endDate = yearMonth.atEndOfMonth()
+    val transactions =
+        transactionPersistence.findByAccountInAndOccurredOnBetween(accounts, startDate, endDate)
+    val transactionsByCategory = transactions.groupBy { it.category?.name }
+
+    return when (format) {
+      ReportFormat.PDF -> generatePdfReport(yearMonth, budgetDetails, transactionsByCategory)
+      ReportFormat.CSV -> generateCsvReport(yearMonth, budgetDetails, transactionsByCategory)
+    }
+  }
+
+  private fun generatePdfReport(
+      yearMonth: YearMonth,
+      budgetDetails: BudgetDetailsResponse,
+      transactionsByCategory: Map<String?, List<Transaction>>
+  ): ByteArray {
+    val outputStream = ByteArrayOutputStream()
+
+    val pdfWriter = PdfWriter(outputStream)
+    val pdf = PdfDocument(pdfWriter)
+    val document = Document(pdf)
+
+    document.add(
+        Paragraph("Monthly Financial Report - ${yearMonth.month} ${yearMonth.year}")
+            .setFontSize(20f)
+            .setBold())
+
+    // Add Summary Section
+    val totalBudget = budgetDetails.categories.sumOf { it.limit }
+    val totalSpent = budgetDetails.categories.sumOf { it.spent }
+    document.add(Paragraph("Budget Summary").setFontSize(16f).setBold())
+    document.add(Paragraph("Total Budget: $${String.format("%.2f", totalBudget)}"))
+    document.add(Paragraph("Total Spent: $${String.format("%.2f", totalSpent)}"))
+    document.add(Paragraph("Remaining: $${String.format("%.2f", totalBudget - totalSpent)}"))
+
+    // Add Category Breakdown
+    document.add(Paragraph("Category Breakdown").setFontSize(16f).setBold())
+
+    budgetDetails.categories.forEach { category ->
+      document.add(Paragraph(category.categoryName).setFontSize(14f).setBold())
+      document.add(Paragraph("Budget: $${String.format("%.2f", category.limit)}"))
+      document.add(Paragraph("Spent: $${String.format("%.2f", category.spent)}"))
+      document.add(
+          Paragraph("Remaining: $${String.format("%.2f", category.limit - category.spent)}"))
+
+      // Add transactions table for this category
+      val categoryTransactions = transactionsByCategory[category.categoryName] ?: emptyList()
+      if (categoryTransactions.isNotEmpty()) {
+        val table = Table(3).useAllAvailableWidth()
+        table.addCell("Date")
+        table.addCell("Description")
+        table.addCell("Amount")
+
+        categoryTransactions
+            .sortedBy { it.occurredOn }
+            .forEach { transaction ->
+              table.addCell(transaction.occurredOn.toString())
+              table.addCell(transaction.description)
+              table.addCell("$${String.format("%.2f", transaction.amount)}")
+            }
+        document.add(table)
+      } else {
+        document.add(Paragraph("No transactions for this category"))
+      }
+      document.add(Paragraph("\n"))
+    }
+
+    document.close()
+    return outputStream.toByteArray()
+  }
+
+  private fun generateCsvReport(
+      yearMonth: YearMonth,
+      budgetDetails: BudgetDetailsResponse,
+      transactionsByCategory: Map<String?, List<Transaction>>
+  ): ByteArray {
+    val csvContent = StringBuilder()
+    
+    // Helper function to escape CSV fields
+    fun escapeCsv(field: String?): String {
+        if (field == null) return ""
+        return if (field.contains(",") || field.contains("\"") || field.contains("\n")) {
+            "\"${field.replace("\"", "\"\"")}\""
+        } else {
+            field
+        }
+    }
+    
+    // Helper function to format currency
+    fun formatCurrency(amount: Double): String {
+        return "$${String.format("%.2f", amount)}"
+    }
+    
+    // Write header with BOM for Excel compatibility
+    csvContent.append('\ufeff') // Add BOM
+    csvContent.appendLine("Monthly Financial Report - ${yearMonth.month} ${yearMonth.year}")
+    csvContent.appendLine()
+    
+    // Write Summary
+    val totalBudget = budgetDetails.categories.sumOf { it.limit }
+    val totalSpent = budgetDetails.categories.sumOf { it.spent }
+    csvContent.appendLine("Budget Summary")
+    csvContent.appendLine("Category,Amount")
+    csvContent.appendLine("Total Budget,${formatCurrency(totalBudget)}")
+    csvContent.appendLine("Total Spent,${formatCurrency(totalSpent)}")
+    csvContent.appendLine("Remaining,${formatCurrency(totalBudget - totalSpent)}")
+    csvContent.appendLine()
+    
+    // Write Category Details
+    csvContent.appendLine("Category Breakdown")
+    budgetDetails.categories.forEach { category ->
+        csvContent.appendLine()
+        csvContent.appendLine("Category: ${escapeCsv(category.categoryName)}")
+        csvContent.appendLine("Type,Amount")
+        csvContent.appendLine("Budget,${formatCurrency(category.limit)}")
+        csvContent.appendLine("Spent,${formatCurrency(category.spent)}")
+        csvContent.appendLine("Remaining,${formatCurrency(category.limit - category.spent)}")
+        
+        // Write transactions
+        val categoryTransactions = transactionsByCategory[category.categoryName] ?: emptyList()
+        if (categoryTransactions.isNotEmpty()) {
+            csvContent.appendLine()
+            csvContent.appendLine("Transactions")
+            csvContent.appendLine("Date,Description,Amount")
+            categoryTransactions
+                .sortedBy { it.occurredOn }
+                .forEach { transaction ->
+                    csvContent.appendLine(
+                        listOf(
+                            transaction.occurredOn?.toString() ?: "",
+                            escapeCsv(transaction.description),
+                            formatCurrency(transaction.amount)
+                        ).joinToString(",")
+                    )
+                }
+        } else {
+            csvContent.appendLine("No transactions for this category")
+        }
+        csvContent.appendLine()
+    }
+    
+    return csvContent.toString().toByteArray(Charsets.UTF_8)
   }
 
   private fun validateBudgetableCategories(
@@ -58,7 +224,11 @@ class BudgetService(
         categoryPersistence.findByIdAndUser(categoryId, user)
             ?: throw IllegalArgumentException("Category not found: $categoryId")
 
-    if (category.name in setOf(CategoryName.TRANSFER.name, CategoryName.INCOME.name)) {
+    if (category.name in setOf(
+        CategoryName.TRANSFER.name, 
+        CategoryName.INCOME.name,
+        CategoryName.CREDIT_CARD_PAYMENT.name
+    )) {
       throw IllegalArgumentException("Cannot manually set budget for ${category.name} category")
     }
   }
@@ -79,9 +249,6 @@ class BudgetService(
     return mapToBudgetResponse(savedBudget, user)
   }
 
-  /*
-   * Create a new budget for the given yearMonth and category limits.
-   */
   private fun createNewBudget(
       yearMonth: YearMonth,
       categoryLimits: List<CategoryBudget>,
@@ -92,10 +259,6 @@ class BudgetService(
     return mapToBudgetResponse(savedBudget, user)
   }
 
-  /*
-   * Find the budget for the given user and yearMonth. If a budget for the exact yearMonth
-   * does not exist, find the latest budget before the given yearMonth.
-   */
   private fun findBudget(user: User, yearMonth: YearMonth): Budget? {
     return budgetPersistence.findByUserAndYearMonth(user, yearMonth)
         ?: budgetPersistence.findLatestBeforeYearMonth(user, yearMonth)
@@ -208,4 +371,9 @@ class BudgetService(
         isActive = category.isActive,
         isEditable = category.isEditable)
   }
+}
+
+enum class ReportFormat {
+  PDF,
+  CSV
 }

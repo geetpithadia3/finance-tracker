@@ -38,9 +38,10 @@ enum class CategoryName(val value: String) {
   RESTAURANT("Restaurant"),
   RENT("Rent"),
   PHONE("Phone"),
-  TRANSFER("Transfer");
+  TRANSFER("Transfer"),
+  CREDIT_CARD_PAYMENT("Credit Card Payment");
 
   fun isEditable(): Boolean {
-    return this != INCOME && this != SAVINGS && this != TRANSFER
+    return this != INCOME && this != SAVINGS && this != TRANSFER && this != CREDIT_CARD_PAYMENT
   }
 }

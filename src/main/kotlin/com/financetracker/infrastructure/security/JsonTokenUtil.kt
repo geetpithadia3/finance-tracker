@@ -37,12 +37,11 @@ class JwtTokenUtil {
   }
 
   fun extractUsername(token: String): String {
-    return extractClaim(token) { obj: Claims -> obj.subject }
+    return extractAllClaims(token).subject
   }
 
-  private fun <T> extractClaim(token: String, claimsResolver: (Claims) -> T): T {
-    val claims = extractAllClaims(token)
-    return claimsResolver(claims)
+  private fun extractExpiration(token: String): Date {
+    return extractAllClaims(token).expiration
   }
 
   private fun extractAllClaims(token: String): Claims {
@@ -55,9 +54,5 @@ class JwtTokenUtil {
 
   private fun isTokenExpired(token: String): Boolean {
     return extractExpiration(token).before(Date())
-  }
-
-  private fun extractExpiration(token: String): Date {
-    return extractClaim(token) { obj: Claims -> obj.expiration }
   }
 }

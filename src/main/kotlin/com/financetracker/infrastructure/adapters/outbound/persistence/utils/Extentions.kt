@@ -132,3 +132,53 @@ fun TransactionEntity.toModel(): Transaction {
       owedShare = this.owedShare,
       shareMetadata = this.shareMetadata)
 }
+
+// RecurringTransaction Extensions
+fun RecurringTransaction.toEntity(): RecurringTransactionEntity {
+  return RecurringTransactionEntity().apply {
+    if (this@toEntity.id != null) {
+      id = this@toEntity.id
+    }
+    description = this@toEntity.description
+    amount = this@toEntity.amount
+    category = CategoryEntity().apply { id = this@toEntity.categoryId }
+    account = AccountEntity().apply { id = this@toEntity.accountId }
+    frequency = this@toEntity.frequency
+    startDate = this@toEntity.startDate
+    endDate = this@toEntity.endDate
+    dateFlexibility = this@toEntity.dateFlexibility
+    rangeStart = this@toEntity.rangeStart
+    rangeEnd = this@toEntity.rangeEnd
+    preference = this@toEntity.preference
+    priority = this@toEntity.priority
+    isActive = this@toEntity.isActive
+    lastMatchedTransactionId = this@toEntity.lastMatchedTransactionId
+    isVariableAmount = this@toEntity.isVariableAmount
+    estimatedMinAmount = this@toEntity.estimatedMinAmount
+    estimatedMaxAmount = this@toEntity.estimatedMaxAmount
+  }
+}
+
+fun RecurringTransactionEntity.toModel(): RecurringTransaction {
+  return RecurringTransaction(
+      id = this.id,
+      description = this.description,
+      amount = this.amount,
+      categoryId = this.category.id,
+      accountId = this.account.id,
+      frequency = this.frequency,
+      startDate = this.startDate,
+      endDate = this.endDate,
+      dateFlexibility = this.dateFlexibility,
+      rangeStart = this.rangeStart,
+      rangeEnd = this.rangeEnd,
+      preference = this.preference,
+      priority = this.priority,
+      isActive = this.isActive,
+      lastMatchedTransactionId = this.lastMatchedTransactionId,
+      isVariableAmount = this.isVariableAmount,
+      estimatedMinAmount = this.estimatedMinAmount,
+      estimatedMaxAmount = this.estimatedMaxAmount,
+      createdAt = this.createdAt,
+      updatedAt = this.updatedAt)
+}

@@ -9,12 +9,11 @@ import com.financetracker.infrastructure.adapters.outbound.persistence.repositor
 import com.financetracker.infrastructure.adapters.outbound.persistence.repository.TransactionRepository
 import com.financetracker.infrastructure.adapters.outbound.persistence.utils.toEntity
 import com.financetracker.infrastructure.adapters.outbound.persistence.utils.toModel
-import com.financetracker.infrastructure.adapters.outbound.persistence.utils.updateFromModel
+import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
 import java.time.YearMonth
 import java.util.*
-import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
 
 @Service
 @Transactional
@@ -52,9 +51,17 @@ class TransactionAdapter(
       existingEntity.amount = transaction.amount
     }
 
-    existingEntity.updateFromModel(transaction)
-
-    existingEntity.apply { category = categoryEntity ?: category }
+    // Update other fields
+    existingEntity.apply {
+      description = transaction.description ?: description
+      occurredOn = transaction.occurredOn ?: occurredOn
+      isDeleted = transaction.isDeleted
+      refunded = transaction.refunded
+      personalShare = transaction.personalShare
+      owedShare = transaction.owedShare
+      shareMetadata = transaction.shareMetadata
+      category = categoryEntity ?: category
+    }
 
     return transactionRepository.save(existingEntity).id
   }
@@ -97,5 +104,9 @@ class TransactionAdapter(
   override fun getIncomeBetween(yearMonth: YearMonth, accounts: List<UUID>): Double {
     return transactionRepository.getSIncomeTotalForMonth(
         yearMonth.year, yearMonth.month.value, accounts)
+  }
+
+  override fun findById(id: UUID): Transaction? {
+    return transactionRepository.findById(id).map { it.toModel() }.orElse(null)
   }
 }
